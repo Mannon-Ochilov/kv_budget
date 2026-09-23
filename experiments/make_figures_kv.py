@@ -63,7 +63,8 @@ def cache_wer():
            ("evict", e5["mass50/fp32"]["cross_cache_mib_mean"], e5["mass50/fp32"]["wer"], e5["mass50/fp32"]["delta_vs_full"], "H2O 50%"),
            ("evict", e5["mass25/fp32"]["cross_cache_mib_mean"], e5["mass25/fp32"]["wer"], e5["mass25/fp32"]["delta_vs_full"], "H2O 25%"),
            ("ours", e6["split/1.000/0.100"]["mib"], e6["split/1.000/0.100"]["wer"], e6["split/1.000/0.100"]["delta_vs_full"], "calibrated"),
-           ("both", cb["split/int4_kivi"]["mib"], cb["split/int4_kivi"]["wer"], cb["split/int4_kivi"]["delta_vs_full"], "calibrated + int4")]
+           ("both", cb["split/int4_kivi"]["mib"], cb["split/int4_kivi"]["wer"], cb["split/int4_kivi"]["delta_vs_full"], "calibrated + int4"),
+           ("exec", cb["split/int8_head"]["mib"], cb["split/int8_head"]["wer"], cb["split/int8_head"]["delta_vs_full"], "calibrated + int8 (selected)")]
     panels.append(("(a) Whisper-medium, Uzbek, 300 test utterances", e6["full"]["mib"], ref, pts, "medium_uz"))
 
     s7 = J("results_cache_sweep_small_en_n300.json")["arms"]
@@ -83,7 +84,8 @@ def cache_wer():
     style = {"prec": (BLUE, "o", "precision only (full cache)"),
              "evict": (ORANGE, "s", "eviction only (H2O, FP32)"),
              "ours": (GREEN, "^", "calibrated split rule (FP32)"),
-             "both": (PINK, "D", "calibrated split + int4")}
+             "both": (PINK, "D", "calibrated + int4 (sim.)"),
+             "exec": (GREEN, "*", "calibrated + int8 (executable)")}
     fig, axes = plt.subplots(1, 2, figsize=(6.69, 3.3))
     for ax, (title, full_mib, ref, pts, name) in zip(axes, panels):
         gate = round(ref, 4) + round(ref * EPS, 4)
@@ -97,11 +99,13 @@ def cache_wer():
         for fam, x, y, (_, lo, hi), lab in pts:
             col, mk, _ = style[fam]
             ci_bar(ax, x, y, ref, lo, hi, col)
-            ax.plot([x], [y], marker=mk, ms=6, mfc="white", mec=col, mew=1.2, ls="none")
+            ax.plot([x], [y], marker=mk, ms=10 if fam == "exec" else 6, mfc=col if fam == "exec" else "white",
+                    mec=col, mew=1.2, ls="none")
             off = {"prec": ((-6, -9), "right", "top"),
                    "evict": ((7, 0), "left", "center"),
                    "ours": ((0, 9), "center", "bottom"),
-                   "both": ((0, 9), "center", "bottom")}[fam]
+                   "both": ((0, 9), "center", "bottom"),
+                   "exec": ((0, -11), "center", "top")}[fam]
             ax.annotate(lab, (x, y), xytext=off[0], textcoords="offset points",
                         ha=off[1], va=off[2], fontsize=6.6, color=col)
         ax.set_xscale("log")

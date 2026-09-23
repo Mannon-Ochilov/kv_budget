@@ -158,11 +158,14 @@ def c3_qr_space():
             r = mib / (full_mib * bits / 32)
             ok = round(dw[2], 4) < delta
             is_sel = sel and lab == sel[1]
-            ax.plot([r], [bits], marker="o", ms=9 if is_sel else 6, mfc=(GREEN if is_sel else (BLUE if ok else "white")),
+            execu = hs.executable(name, lab)
+            # circle: executable in ONNX Runtime; diamond: NumPy simulation (capacity headroom)
+            ax.plot([r], [bits], marker="o" if execu else "D", ms=9 if is_sel else (6 if execu else 5),
+                    mfc=(GREEN if is_sel else (BLUE if ok else "white")),
                     mec=GREEN if is_sel else (BLUE if ok else ORANGE), mew=1.3, ls="none")
             if is_sel:
-                ax.annotate(f"selected (α = 0.7):\n{lab}, {mib:.0f} MiB", (r, bits), xytext=((-14, 8) if name == "medium_uz" else (-14, -28)),
-                            textcoords="offset points", ha="right", va=("bottom" if name == "medium_uz" else "top"), fontsize=6.8, color=GREEN)
+                ax.annotate(f"selected (α = 0.7):\n{lab}, {mib:.0f} MiB", (r, bits), xytext=((14, 10) if name == "medium_uz" else (-14, -28)),
+                            textcoords="offset points", ha=("left" if name == "medium_uz" else "right"), va=("bottom" if name == "medium_uz" else "top"), fontsize=6.8, color=GREEN)
         ax.set_yscale("log", base=2)
         ax.set_yticks([4, 8, 16, 32], ["int4", "int8", "FP16", "FP32"])
         ax.set_ylim(3, 48)
@@ -172,11 +175,12 @@ def c3_qr_space():
         ax.spines[["top", "right"]].set_visible(False)
         ax.tick_params(labelsize=7.5)
     axes[0].set_ylabel("cache precision, q")
-    h = [plt.Line2D([], [], marker="o", ls="none", mfc=BLUE, mec=BLUE, ms=6, label="passes the WER gate"),
+    h = [plt.Line2D([], [], marker="o", ls="none", mfc=BLUE, mec=BLUE, ms=6, label="executable in ORT, passes the gate"),
+         plt.Line2D([], [], marker="D", ls="none", mfc=BLUE, mec=BLUE, ms=5, label="simulated (int4 / KIVI), passes the gate"),
          plt.Line2D([], [], marker="o", ls="none", mfc="white", mec=ORANGE, mew=1.2, ms=6, label="fails the gate"),
-         plt.Line2D([], [], marker="o", ls="none", mfc=GREEN, mec=GREEN, ms=8, label="selected at α = 0.7 (among measured candidates)"),
+         plt.Line2D([], [], marker="o", ls="none", mfc=GREEN, mec=GREEN, ms=8, label="selected at α = 0.7 (executable candidates)"),
          plt.Line2D([], [], color=GREEN, lw=1.1, ls=(0, (5, 3)), label="budget iso-line: below it fits")]
-    fig.legend(handles=h, frameon=False, fontsize=6.6, loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.01))
+    fig.legend(handles=h, frameon=False, fontsize=6.4, loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.03))
     axes[0].text(0.03, 0.60, "α = 0.5: B_KV < 0 —\nweights alone exceed the budget", transform=axes[0].transAxes,
                  fontsize=6.6, color=GREY, va="bottom")
     fig.tight_layout(w_pad=1.5, rect=(0, 0.06, 1, 1))
