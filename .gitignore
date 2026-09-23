@@ -1,0 +1,9 @@
+models/
+logs/
+__pycache__/
+*.npy
+*.onnx
+README.md
+MAQOLA_REJA.md
+build_kv_paper_uz.py
+onnxruntime_profile__*.json

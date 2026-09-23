@@ -1,0 +1,239 @@
+{
+  "model": "models/whisper_with_past/decoder_with_past_untied_int8.onnx",
+  "has_past": true,
+  "budget_mib": 16.799999999999997,
+  "rows": [
+    {
+      "t": 1,
+      "weight_bytes": 405431296,
+      "act_bytes": 295183360,
+      "macs": 479208448,
+      "macs_cross_kv": 0,
+      "by_role": {
+        "self_attn.q_proj": {
+          "w": 25165824,
+          "act": 24576,
+          "macs": 25165824
+        },
+        "self_attn.k_proj": {
+          "w": 25165824,
+          "act": 24576,
+          "macs": 25165824
+        },
+        "self_attn.v_proj": {
+          "w": 25165824,
+          "act": 24576,
+          "macs": 25165824
+        },
+        "self_attn.out_proj": {
+          "w": 25165824,
+          "act": 24576,
+          "macs": 25165824
+        },
+        "encoder_attn.q_proj": {
+          "w": 25165824,
+          "act": 24576,
+          "macs": 25165824
+        },
+        "encoder_attn.out_proj": {
+          "w": 25165824,
+          "act": 24576,
+          "macs": 25165824
+        },
+        "fc1": {
+          "w": 100663296,
+          "act": 24576,
+          "macs": 100663296
+        },
+        "fc2": {
+          "w": 100663296,
+          "act": 98304,
+          "macs": 100663296
+        },
+        "lm_head": {
+          "w": 53109760,
+          "act": 1024,
+          "macs": 53109760
+        }
+      },
+      "kv_dec_bytes": 0,
+      "kv_enc_bytes": 294912000,
+      "macs_attn_self": 49152,
+      "macs_attn_cross": 73728000
+    },
+    {
+      "t": 10,
+      "weight_bytes": 405431296,
+      "act_bytes": 299395072,
+      "macs": 4796508160,
+      "macs_cross_kv": 0,
+      "by_role": {
+        "self_attn.q_proj": {
+          "w": 25165824,
+          "act": 245760,
+          "macs": 251658240
+        },
+        "self_attn.k_proj": {
+          "w": 25165824,
+          "act": 245760,
+          "macs": 251658240
+        },
+        "self_attn.v_proj": {
+          "w": 25165824,
+          "act": 245760,
+          "macs": 251658240
+        },
+        "self_attn.out_proj": {
+          "w": 25165824,
+          "act": 245760,
+          "macs": 251658240
+        },
+        "encoder_attn.q_proj": {
+          "w": 25165824,
+          "act": 245760,
+          "macs": 251658240
+        },
+        "encoder_attn.out_proj": {
+          "w": 25165824,
+          "act": 245760,
+          "macs": 251658240
+        },
+        "fc1": {
+          "w": 100663296,
+          "act": 245760,
+          "macs": 1006632960
+        },
+        "fc2": {
+          "w": 100663296,
+          "act": 983040,
+          "macs": 1006632960
+        },
+        "lm_head": {
+          "w": 53109760,
+          "act": 10240,
+          "macs": 531097600
+        }
+      },
+      "kv_dec_bytes": 1769472,
+      "kv_enc_bytes": 294912000,
+      "macs_attn_self": 4915200,
+      "macs_attn_cross": 737280000
+    },
+    {
+      "t": 30,
+      "weight_bytes": 405431296,
+      "act_bytes": 308754432,
+      "macs": 14419015680,
+      "macs_cross_kv": 0,
+      "by_role": {
+        "self_attn.q_proj": {
+          "w": 25165824,
+          "act": 737280,
+          "macs": 754974720
+        },
+        "self_attn.k_proj": {
+          "w": 25165824,
+          "act": 737280,
+          "macs": 754974720
+        },
+        "self_attn.v_proj": {
+          "w": 25165824,
+          "act": 737280,
+          "macs": 754974720
+        },
+        "self_attn.out_proj": {
+          "w": 25165824,
+          "act": 737280,
+          "macs": 754974720
+        },
+        "encoder_attn.q_proj": {
+          "w": 25165824,
+          "act": 737280,
+          "macs": 754974720
+        },
+        "encoder_attn.out_proj": {
+          "w": 25165824,
+          "act": 737280,
+          "macs": 754974720
+        },
+        "fc1": {
+          "w": 100663296,
+          "act": 737280,
+          "macs": 3019898880
+        },
+        "fc2": {
+          "w": 100663296,
+          "act": 2949120,
+          "macs": 3019898880
+        },
+        "lm_head": {
+          "w": 53109760,
+          "act": 30720,
+          "macs": 1593292800
+        }
+      },
+      "kv_dec_bytes": 5701632,
+      "kv_enc_bytes": 294912000,
+      "macs_attn_self": 44236800,
+      "macs_attn_cross": 2211840000
+    },
+    {
+      "t": 96,
+      "weight_bytes": 405431296,
+      "act_bytes": 339640320,
+      "macs": 46452277248,
+      "macs_cross_kv": 0,
+      "by_role": {
+        "self_attn.q_proj": {
+          "w": 25165824,
+          "act": 2359296,
+          "macs": 2415919104
+        },
+        "self_attn.k_proj": {
+          "w": 25165824,
+          "act": 2359296,
+          "macs": 2415919104
+        },
+        "self_attn.v_proj": {
+          "w": 25165824,
+          "act": 2359296,
+          "macs": 2415919104
+        },
+        "self_attn.out_proj": {
+          "w": 25165824,
+          "act": 2359296,
+          "macs": 2415919104
+        },
+        "encoder_attn.q_proj": {
+          "w": 25165824,
+          "act": 2359296,
+          "macs": 2415919104
+        },
+        "encoder_attn.out_proj": {
+          "w": 25165824,
+          "act": 2359296,
+          "macs": 2415919104
+        },
+        "fc1": {
+          "w": 100663296,
+          "act": 2359296,
+          "macs": 9663676416
+        },
+        "fc2": {
+          "w": 100663296,
+          "act": 9437184,
+          "macs": 9663676416
+        },
+        "lm_head": {
+          "w": 53109760,
+          "act": 98304,
+          "macs": 5098536960
+        }
+      },
+      "kv_dec_bytes": 18677760,
+      "kv_enc_bytes": 294912000,
+      "macs_attn_self": 452984832,
+      "macs_attn_cross": 7077888000
+    }
+  ]
+}

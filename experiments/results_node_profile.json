@@ -1,0 +1,17 @@
+{
+  "t": 30,
+  "runs_kept": 3,
+  "ms_by_role": {
+    "other": 50.26800000000026,
+    "layer norm": 15.743666666666666,
+    "self-attn proj": 18.171333333333333,
+    "attention products": 63.99333333333334,
+    "cross-attn Q/out proj": 9.266333333333332,
+    "quantize activations": 0.62,
+    "cross-attn K/V proj": 346.26599999999996,
+    "FFN fc1/fc2": 35.324000000000005,
+    "lm_head + dequantize": 66.28166666666667
+  },
+  "total_ms": 605.9343333333336,
+  "model": "D:/DSc/ISH/nnopt/models/_whole_net/dec_int8.onnx"
+}

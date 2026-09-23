@@ -1,0 +1,15 @@
+{
+  "t": 30,
+  "runs_kept": 3,
+  "ms_by_role": {
+    "other": 13.095333333333318,
+    "layer norm": 1.1333333333333333,
+    "self-attn proj": 5.567333333333335,
+    "attention products": 7.159666666666668,
+    "cross-attn Q/out proj": 2.8116666666666665,
+    "FFN fc1/fc2": 9.370333333333333,
+    "lm_head + dequantize": 2.4663333333333335
+  },
+  "total_ms": 41.603999999999985,
+  "model": "D:\\DSc\\ISH\\kv_budget\\models\\whisper_with_past\\decoder_with_past_untied_int8.onnx"
+}

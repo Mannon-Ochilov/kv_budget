@@ -1,0 +1,17 @@
+{
+  "t": 30,
+  "runs_kept": 3,
+  "ms_by_role": {
+    "cache dequantize": 13.138333333333335,
+    "other": 35.60600000000022,
+    "quantize activations": 9.469333333333333,
+    "layer norm": 1.2306666666666668,
+    "self-attn proj": 5.949666666666661,
+    "attention products": 10.212666666666673,
+    "cross-attn Q/out proj": 2.983,
+    "FFN fc1/fc2": 9.920666666666667,
+    "lm_head + dequantize": 2.474
+  },
+  "total_ms": 90.98433333333355,
+  "model": "D:\\DSc\\ISH\\kv_budget\\models\\whisper_with_past\\decoder_with_past_cache_dq.onnx"
+}

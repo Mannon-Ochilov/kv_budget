@@ -1,0 +1,48 @@
+{
+ "t": 30,
+ "rounds": 7,
+ "arms": {
+  "medium  fp32 cache, 1500": {
+   "model": "decoder_with_past_untied_int8.onnx",
+   "positions": 1500,
+   "median_ms": 35.44560000000274,
+   "min_ms": 34.890899999936664,
+   "max_ms": 37.156700000196
+  },
+  "medium  fp32 cache, 393": {
+   "model": "decoder_with_past_untied_int8.onnx",
+   "positions": 393,
+   "median_ms": 25.99049999980707,
+   "min_ms": 25.685000000066793,
+   "max_ms": 26.288800000202173
+  },
+  "medium  int8 cache, 1500": {
+   "model": "decoder_with_past_cache_int.onnx",
+   "positions": 1500,
+   "median_ms": 37.780499999826134,
+   "min_ms": 37.39590000031967,
+   "max_ms": 41.40330000018366
+  },
+  "medium  int8 cache, 393": {
+   "model": "decoder_with_past_cache_int.onnx",
+   "positions": 393,
+   "median_ms": 26.34360000001834,
+   "min_ms": 25.495999999748165,
+   "max_ms": 35.18119999989722
+  },
+  "small   fp32 cache, 1500": {
+   "model": "decoder_with_past_untied_int8.onnx",
+   "positions": 1500,
+   "median_ms": 13.12610000013592,
+   "min_ms": 12.858499999765627,
+   "max_ms": 14.545600000019476
+  },
+  "small   fp32 cache, 348": {
+   "model": "decoder_with_past_untied_int8.onnx",
+   "positions": 348,
+   "median_ms": 9.3127000000095,
+   "min_ms": 9.021600000323815,
+   "max_ms": 9.628599999814469
+  }
+ }
+}

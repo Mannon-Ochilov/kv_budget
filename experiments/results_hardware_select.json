@@ -1,0 +1,319 @@
+{
+ "medium_uz": {
+  "w_layer": 14.0,
+  "layers": 24,
+  "ref": 0.1812345154845155,
+  "alpha": {
+   "0.5": {
+    "budget_kv_layer": -2.0,
+    "hardware_point": null,
+    "max_gated": [
+     8.7890625,
+     "int4 KIVI, H2O 25%"
+    ]
+   },
+   "0.6": {
+    "budget_kv_layer": 0.3999999999999986,
+    "hardware_point": [
+     9.206484375,
+     "int4 KIVI, split"
+    ],
+    "max_gated": [
+     8.7890625,
+     "int4 KIVI, H2O 25%"
+    ]
+   },
+   "0.7": {
+    "budget_kv_layer": 2.799999999999997,
+    "hardware_point": [
+     35.15625,
+     "int4 KIVI, full"
+    ],
+    "max_gated": [
+     8.7890625,
+     "int4 KIVI, H2O 25%"
+    ]
+   },
+   "0.8": {
+    "budget_kv_layer": 5.200000000000003,
+    "hardware_point": [
+     73.651875,
+     "FP32, split (1.0, 0.1)"
+    ],
+    "max_gated": [
+     8.7890625,
+     "int4 KIVI, H2O 25%"
+    ]
+   }
+  },
+  "l3": {
+   "8": {
+    "budget_kv_layer": -8.4,
+    "hardware_point": null,
+    "max_gated": [
+     8.7890625,
+     "int4 KIVI, H2O 25%"
+    ]
+   },
+   "12": {
+    "budget_kv_layer": -5.600000000000001,
+    "hardware_point": null,
+    "max_gated": [
+     8.7890625,
+     "int4 KIVI, H2O 25%"
+    ]
+   },
+   "16": {
+    "budget_kv_layer": -2.8000000000000007,
+    "hardware_point": null,
+    "max_gated": [
+     8.7890625,
+     "int4 KIVI, H2O 25%"
+    ]
+   },
+   "24": {
+    "budget_kv_layer": 2.799999999999997,
+    "hardware_point": [
+     35.15625,
+     "int4 KIVI, full"
+    ],
+    "max_gated": [
+     8.7890625,
+     "int4 KIVI, H2O 25%"
+    ]
+   },
+   "32": {
+    "budget_kv_layer": 8.399999999999999,
+    "hardware_point": [
+     140.625,
+     "FP32, H2O 50%"
+    ],
+    "max_gated": [
+     8.7890625,
+     "int4 KIVI, H2O 25%"
+    ]
+   },
+   "48": {
+    "budget_kv_layer": 19.599999999999994,
+    "hardware_point": [
+     281.25,
+     "FP32, full"
+    ],
+    "max_gated": [
+     8.7890625,
+     "int4 KIVI, H2O 25%"
+    ]
+   }
+  },
+  "strata": {
+   "0-5 s": {
+    "n": 133,
+    "full": 0.20819906910132474,
+    "FP32, full": 0.20819906910132474,
+    "FP16, full": 0.2187253848907984,
+    "int8 head, full": 0.2127103472968134,
+    "int8 KIVI, full": 0.2202291442892946,
+    "int4 KIVI, full": 0.2172126745435016,
+    "FP32, H2O 50%": 0.22073039742212672,
+    "FP32, H2O 25%": 0.22517901897601145,
+    "int4 KIVI, H2O 25%": 0.22585929108485497,
+    "FP32, split (1.0, 0.1)": 0.23677049767275332,
+    "int8 KIVI, split": 0.23263515932688864,
+    "int4 KIVI, split": 0.2248657357679914
+   },
+   "5-10 s": {
+    "n": 167,
+    "full": 0.1597597512268171,
+    "FP32, full": 0.1597597512268171,
+    "FP16, full": 0.16045835402122827,
+    "int8 head, full": 0.15896134803320433,
+    "int8 KIVI, full": 0.15745267706345553,
+    "int4 KIVI, full": 0.15628833907277023,
+    "FP32, H2O 50%": 0.1597597512268171,
+    "FP32, H2O 25%": 0.16405518965399205,
+    "int4 KIVI, H2O 25%": 0.16301298501897304,
+    "FP32, split (1.0, 0.1)": 0.16346208681538024,
+    "int8 KIVI, split": 0.15984349981355972,
+    "int4 KIVI, split": 0.1599120440437806
+   }
+  }
+ },
+ "small_en": {
+  "w_layer": 7.88,
+  "layers": 12,
+  "ref": 0.047746255180394985,
+  "alpha": {
+   "0.5": {
+    "budget_kv_layer": 4.12,
+    "hardware_point": [
+     26.3671875,
+     "int8 head, full"
+    ],
+    "max_gated": [
+     3.056337890625,
+     "int4 KIVI, split"
+    ]
+   },
+   "0.6": {
+    "budget_kv_layer": 6.519999999999999,
+    "hardware_point": [
+     52.734375,
+     "FP32, H2O 50%"
+    ],
+    "max_gated": [
+     3.056337890625,
+     "int4 KIVI, split"
+    ]
+   },
+   "0.7": {
+    "budget_kv_layer": 8.919999999999998,
+    "hardware_point": [
+     105.46875,
+     "FP32, full"
+    ],
+    "max_gated": [
+     3.056337890625,
+     "int4 KIVI, split"
+    ]
+   },
+   "0.8": {
+    "budget_kv_layer": 11.320000000000004,
+    "hardware_point": [
+     105.46875,
+     "FP32, full"
+    ],
+    "max_gated": [
+     3.056337890625,
+     "int4 KIVI, split"
+    ]
+   }
+  },
+  "l3": {
+   "8": {
+    "budget_kv_layer": -2.2800000000000002,
+    "hardware_point": null,
+    "max_gated": [
+     3.056337890625,
+     "int4 KIVI, split"
+    ]
+   },
+   "12": {
+    "budget_kv_layer": 0.5199999999999987,
+    "hardware_point": [
+     6.11267578125,
+     "int8 KIVI, split"
+    ],
+    "max_gated": [
+     3.056337890625,
+     "int4 KIVI, split"
+    ]
+   },
+   "16": {
+    "budget_kv_layer": 3.3199999999999994,
+    "hardware_point": [
+     26.3671875,
+     "int8 head, full"
+    ],
+    "max_gated": [
+     3.056337890625,
+     "int4 KIVI, split"
+    ]
+   },
+   "24": {
+    "budget_kv_layer": 8.919999999999998,
+    "hardware_point": [
+     105.46875,
+     "FP32, full"
+    ],
+    "max_gated": [
+     3.056337890625,
+     "int4 KIVI, split"
+    ]
+   },
+   "32": {
+    "budget_kv_layer": 14.52,
+    "hardware_point": [
+     105.46875,
+     "FP32, full"
+    ],
+    "max_gated": [
+     3.056337890625,
+     "int4 KIVI, split"
+    ]
+   },
+   "48": {
+    "budget_kv_layer": 25.719999999999995,
+    "hardware_point": [
+     105.46875,
+     "FP32, full"
+    ],
+    "max_gated": [
+     3.056337890625,
+     "int4 KIVI, split"
+    ]
+   }
+  },
+  "strata": {
+   "0-5 s": {
+    "n": 107,
+    "full": 0.06420917592577845,
+    "FP32, full": 0.06420917592577845,
+    "FP16, full": 0.06327459648652611,
+    "int8 head, full": 0.06287406244113225,
+    "int8 KIVI, full": 0.0634303597264015,
+    "int4 KIVI, full": 0.06453368267551884,
+    "FP32, H2O 50%": 0.06401447187593422,
+    "FP32, H2O 25%": 0.06531249887489579,
+    "int4 KIVI, H2O 25%": 0.0624308789372011,
+    "FP32, split (0.75, 0.05)": 0.06539746064210054,
+    "int8 KIVI, split": 0.0630610120439697,
+    "int4 KIVI, split": 0.06539746064210054
+   },
+   "5-10 s": {
+    "n": 113,
+    "full": 0.04298562142302601,
+    "FP32, full": 0.04298562142302601,
+    "FP16, full": 0.04298562142302601,
+    "int8 head, full": 0.041911032295339545,
+    "int8 KIVI, full": 0.04235351017144574,
+    "int4 KIVI, full": 0.043354352986447846,
+    "FP32, H2O 50%": 0.04288858680107291,
+    "FP32, H2O 25%": 0.04365197364969497,
+    "int4 KIVI, H2O 25%": 0.04352657506132479,
+    "FP32, split (0.75, 0.05)": 0.04331797550479789,
+    "int8 KIVI, split": 0.04453723662412178,
+    "int4 KIVI, split": 0.0416627354646021
+   },
+   "10-20 s": {
+    "n": 71,
+    "full": 0.031107873147080856,
+    "FP32, full": 0.031107873147080856,
+    "FP16, full": 0.02977430374543282,
+    "int8 head, full": 0.03148972447493806,
+    "int8 KIVI, full": 0.030141959524744473,
+    "int4 KIVI, full": 0.030457214866669167,
+    "FP32, H2O 50%": 0.029833411064290542,
+    "FP32, H2O 25%": 0.07054511421502027,
+    "int4 KIVI, H2O 25%": 0.07420367579421522,
+    "FP32, split (0.75, 0.05)": 0.029922970349563247,
+    "int8 KIVI, split": 0.02904606138620455,
+    "int4 KIVI, split": 0.028364817747214433
+   },
+   "20-30 s": {
+    "n": 9,
+    "full": 0.043051168423946844,
+    "FP32, full": 0.043051168423946844,
+    "FP16, full": 0.044787279535057956,
+    "int8 head, full": 0.041507958547403634,
+    "int8 KIVI, full": 0.04283070987015496,
+    "int4 KIVI, full": 0.04437391974669816,
+    "FP32, H2O 50%": 0.041246639140969286,
+    "FP32, H2O 25%": 0.3541989358363235,
+    "int4 KIVI, H2O 25%": 0.27489922499591496,
+    "FP32, split (0.75, 0.05)": 0.043423667359664166,
+    "int8 KIVI, split": 0.043423667359664166,
+    "int4 KIVI, split": 0.05199399363832378
+   }
+  }
+ }
+}
