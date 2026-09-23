@@ -158,15 +158,24 @@ def greedy(setup, first, step, enc, prompt, keep_fn, cache_fn):
     logits = out[names.index("logits")]
     present = {n: v for n, v in zip(names, out) if n.startswith("present")}
     mass = np.zeros(ENC_POS, np.float64)
+    mass_l = np.zeros((setup.n_layers, ENC_POS), np.float64)
     for n, v in zip(names, out):
         if "encoder_attn" in n and n.endswith("Softmax_output_0"):
-            mass += v.sum(axis=(0, 1, 2))
-    idx = keep_fn(mass)
+            layer = int(n.split("layers.")[1].split("/")[0])
+            mass_l[layer] = v.sum(axis=(0, 1, 2))
+            mass += mass_l[layer]
+    # keep_fn(mass) -> one index set for every layer, or
+    # keep_fn(mass, mass_l) -> {layer: index set} (per-layer baselines)
+    try:
+        idx = keep_fn(mass, mass_l)
+    except TypeError:
+        idx = keep_fn(mass)
     for i in range(setup.n_layers):
         kn, vn = f"present.{i}.encoder.key", f"present.{i}.encoder.value"
         k, v = present[kn], present[vn]
-        if idx is not None:
-            k, v = k[:, :, idx, :], v[:, :, idx, :]
+        idx_i = idx[i] if isinstance(idx, dict) else idx
+        if idx_i is not None:
+            k, v = k[:, :, idx_i, :], v[:, :, idx_i, :]
         present[kn], present[vn] = cache_fn(np.ascontiguousarray(k),
                                             np.ascontiguousarray(v))
     step_in = [i.name for i in step.get_inputs()]
@@ -189,7 +198,12 @@ def greedy(setup, first, step, enc, prompt, keep_fn, cache_fn):
             kn, vn = f"present.{i}.decoder.key", f"present.{i}.decoder.value"
             present[kn], present[vn] = cache_fn(present[kn], present[vn])
         nxt = int(np.argmax(logits[0, -1]))
-    kept = ENC_POS if idx is None else len(idx)
+    if idx is None:
+        kept = ENC_POS
+    elif isinstance(idx, dict):
+        kept = float(np.mean([len(x) for x in idx.values()]))
+    else:
+        kept = len(idx)
     return ids[1 + len(prompt):], kept
 
 

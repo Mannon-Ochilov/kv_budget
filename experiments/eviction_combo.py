@@ -23,7 +23,7 @@ from kvlib import (SEED, SETUPS, cache_mib, encoder_states, greedy,
                    text_norm, with_attention)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-BITS = {"int8_kivi": 8, "int4_kivi": 4}
+BITS = {"int8_kivi": 8, "int4_kivi": 4, "int8_head": 8}
 
 
 def main():
@@ -46,7 +46,7 @@ def main():
     tok, prompt = prompt_ids(setup)
     first, step = session(with_attention(setup.first)), session(setup.step)
 
-    for scheme in ("int8_kivi", "int4_kivi"):
+    for scheme in ("int8_kivi", "int4_kivi", "int8_head"):
         name = f"split/{scheme}"
         if name in res["arms"]:
             continue
