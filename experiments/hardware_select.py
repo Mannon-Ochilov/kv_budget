@@ -102,7 +102,13 @@ def strata(name, C, ref):
 
 
 def main():
-    res = {}
+    global M_L3
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--l3", type=float, default=24.0, help="L3 size in MiB of the machine to select for")
+    args = ap.parse_args()
+    M_L3 = args.l3
+    res = {"m_l3": M_L3}
     for name in ("medium_uz", "small_en"):
         C, ref = candidates(name)
         L, w = LAYERS[name], W_LAYER[name]
@@ -120,10 +126,10 @@ def main():
                   f";  max gated: {mx[1]} ({mx[0]:.1f} MiB)")
         # the weight paper's L3 sweep, alpha = 0.7: which (q, r) the rule picks per cache size
         res[name]["l3"] = {}
-        for m in (8, 12, 16, 24, 32, 48):
+        for m in sorted({8, 12, 16, 24, 32, 48, M_L3}):
             b_kv, hw, mx = select(name, C, ref, 0.7, m)
             res[name]["l3"][str(m)] = {"budget_kv_layer": b_kv, "hardware_point": hw, "max_gated": mx}
-            print(f"  L3 {m:2d} MiB (alpha 0.7): B_KV/layer {b_kv:6.2f} -> "
+            print(f"  L3 {m:4.1f} MiB (alpha 0.7): B_KV/layer {b_kv:6.2f} -> "
                   f"{hw[1] + f' ({hw[0]:.1f} MiB)' if hw else 'NONE fits (weights alone exceed budget)'}")
         st = strata(name, C, ref)
         res[name]["strata"] = st
