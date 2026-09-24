@@ -164,8 +164,8 @@ def c3_qr_space():
                     mfc=(GREEN if is_sel else (BLUE if ok else "white")),
                     mec=GREEN if is_sel else (BLUE if ok else ORANGE), mew=1.3, ls="none")
             if is_sel:
-                ax.annotate(f"selected (α = 0.7):\n{lab}, {mib:.0f} MiB", (r, bits), xytext=((14, 10) if name == "medium_uz" else (-14, -28)),
-                            textcoords="offset points", ha=("left" if name == "medium_uz" else "right"), va=("bottom" if name == "medium_uz" else "top"), fontsize=6.8, color=GREEN)
+                ax.annotate(f"selected (α = 0.7):\n{lab}, {mib:.0f} MiB", (r, bits), xytext=((-16, -30) if name == "medium_uz" else (-14, -28)),
+                            textcoords="offset points", ha="right", va="top", fontsize=6.8, color=GREEN)
         ax.set_yscale("log", base=2)
         ax.set_yticks([4, 8, 16, 32], ["int4", "int8", "FP16", "FP32"])
         ax.set_ylim(3, 48)

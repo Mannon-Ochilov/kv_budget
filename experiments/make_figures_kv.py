@@ -56,6 +56,7 @@ def cache_wer():
     e5 = J("results_cache_eviction_wer_cascade_n300.json")["arms"]
     e6 = J("results_eviction_budget_medium_uz.json")["test"]
     cb = J("results_eviction_combo_medium_uz.json")["arms"]
+    bd = J("results_boundary_int8_medium_uz.json")
     ref = e6["full"]["wer"]
     pts = [("prec", e1["fp16"]["cross_cache_mib"], e1["fp16"]["wer"], e1["fp16"]["delta_vs_fp32"], "FP16"),
            ("prec", e1["int8_kivi"]["cross_cache_mib"], e1["int8_kivi"]["wer"], e1["int8_kivi"]["delta_vs_fp32"], "int8"),
@@ -64,7 +65,8 @@ def cache_wer():
            ("evict", e5["mass25/fp32"]["cross_cache_mib_mean"], e5["mass25/fp32"]["wer"], e5["mass25/fp32"]["delta_vs_full"], "H2O 25%"),
            ("ours", e6["split/1.000/0.100"]["mib"], e6["split/1.000/0.100"]["wer"], e6["split/1.000/0.100"]["delta_vs_full"], "calibrated"),
            ("both", cb["split/int4_kivi"]["mib"], cb["split/int4_kivi"]["wer"], cb["split/int4_kivi"]["delta_vs_full"], "calibrated + int4"),
-           ("exec", cb["split/int8_head"]["mib"], cb["split/int8_head"]["wer"], cb["split/int8_head"]["delta_vs_full"], "calibrated + int8 (selected)")]
+           ("lat", cb["split/int8_head"]["mib"], cb["split/int8_head"]["wer"], cb["split/int8_head"]["delta_vs_full"], "calibrated + int8 (latency)"),
+           ("exec", bd["mib"], bd["wer"], bd["delta_vs_full"], f"int8, K = {bd['K']} (selected)")]
     panels.append(("(a) Whisper-medium, Uzbek, 300 test utterances", e6["full"]["mib"], ref, pts, "medium_uz"))
 
     s7 = J("results_cache_sweep_small_en_n300.json")["arms"]
@@ -85,7 +87,8 @@ def cache_wer():
              "evict": (ORANGE, "s", "eviction only (H2O, FP32)"),
              "ours": (GREEN, "^", "calibrated split rule (FP32)"),
              "both": (PINK, "D", "calibrated + int4 (sim.)"),
-             "exec": (GREEN, "*", "calibrated + int8 (executable)")}
+             "lat": (GREEN, "P", "calibrated + int8, executable (latency option)"),
+             "exec": (GREEN, "*", "int8, budget boundary: hardware-selected")}
     fig, axes = plt.subplots(1, 2, figsize=(6.69, 3.3))
     for ax, (title, full_mib, ref, pts, name) in zip(axes, panels):
         gate = round(ref, 4) + round(ref * EPS, 4)
@@ -99,13 +102,19 @@ def cache_wer():
         for fam, x, y, (_, lo, hi), lab in pts:
             col, mk, _ = style[fam]
             ci_bar(ax, x, y, ref, lo, hi, col)
-            ax.plot([x], [y], marker=mk, ms=10 if fam == "exec" else 6, mfc=col if fam == "exec" else "white",
+            ax.plot([x], [y], marker=mk, ms=11 if fam == "exec" else (7 if fam == "lat" else 6),
+                    mfc=col if fam in ("exec", "lat") else "white",
                     mec=col, mew=1.2, ls="none")
             off = {"prec": ((-6, -9), "right", "top"),
                    "evict": ((7, 0), "left", "center"),
                    "ours": ((0, 9), "center", "bottom"),
                    "both": ((0, 9), "center", "bottom"),
-                   "exec": ((0, -11), "center", "top")}[fam]
+                   "lat": ((0, -11), "center", "top"),
+                   "exec": ((-6, 24), "right", "bottom")}[fam]
+            if fam == "exec":
+                ax.annotate(lab, (x, y), xytext=(28, 62), textcoords="offset points", ha="left", va="bottom",
+                            fontsize=6.6, color=col, arrowprops=dict(arrowstyle="-", color=col, lw=0.7))
+                continue
             ax.annotate(lab, (x, y), xytext=off[0], textcoords="offset points",
                         ha=off[1], va=off[2], fontsize=6.6, color=col)
         ax.set_xscale("log")

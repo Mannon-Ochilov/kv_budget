@@ -56,6 +56,10 @@ def candidates(name):
                        ("split/int8_head", "int8 head, split")]:
             if k in cb:
                 C.append((lab, cb[k]["mib"], cb[k]["delta_vs_full"], cb[k]["per_sample_wer"]))
+        bpath = os.path.join(HERE, "results_boundary_int8_medium_uz.json")
+        if os.path.exists(bpath):
+            bd = J("results_boundary_int8_medium_uz.json")
+            C.append((f"int8 head, K={bd['K']}", bd["mib"], bd["delta_vs_full"], bd["per_sample_wer"]))
         ref = e1["fp32"]["wer"]
     else:
         s7 = J("results_cache_sweep_small_en_n300.json")["arms"]
