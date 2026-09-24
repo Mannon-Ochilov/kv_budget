@@ -1,48 +1,55 @@
 {
  "t": 30,
- "rounds": 7,
+ "rounds": 21,
  "arms": {
   "medium  fp32 cache, 1500": {
    "model": "decoder_with_past_untied_int8.onnx",
    "positions": 1500,
-   "median_ms": 35.44560000000274,
-   "min_ms": 34.890899999936664,
-   "max_ms": 37.156700000196
+   "median_ms": 38.485499999296735,
+   "min_ms": 36.30490000068676,
+   "max_ms": 49.491300000227056
   },
   "medium  fp32 cache, 393": {
    "model": "decoder_with_past_untied_int8.onnx",
    "positions": 393,
-   "median_ms": 25.99049999980707,
-   "min_ms": 25.685000000066793,
-   "max_ms": 26.288800000202173
+   "median_ms": 27.48539999993227,
+   "min_ms": 26.259199999913108,
+   "max_ms": 36.57849999945029
   },
   "medium  int8 cache, 1500": {
    "model": "decoder_with_past_cache_int.onnx",
    "positions": 1500,
-   "median_ms": 37.780499999826134,
-   "min_ms": 37.39590000031967,
-   "max_ms": 41.40330000018366
+   "median_ms": 39.9169999982405,
+   "min_ms": 37.80139999980747,
+   "max_ms": 50.2401000012469
   },
   "medium  int8 cache, 393": {
    "model": "decoder_with_past_cache_int.onnx",
    "positions": 393,
-   "median_ms": 26.34360000001834,
-   "min_ms": 25.495999999748165,
-   "max_ms": 35.18119999989722
+   "median_ms": 27.76149999954214,
+   "min_ms": 26.567300001261174,
+   "max_ms": 35.68009999980859
+  },
+  "medium  int8 cache, 1433": {
+   "model": "decoder_with_past_cache_int.onnx",
+   "positions": 1433,
+   "median_ms": 40.10959999868646,
+   "min_ms": 38.0459999996674,
+   "max_ms": 47.55789999944682
   },
   "small   fp32 cache, 1500": {
    "model": "decoder_with_past_untied_int8.onnx",
    "positions": 1500,
-   "median_ms": 13.12610000013592,
-   "min_ms": 12.858499999765627,
-   "max_ms": 14.545600000019476
+   "median_ms": 14.045200001419289,
+   "min_ms": 13.391000000410713,
+   "max_ms": 20.748599999933504
   },
   "small   fp32 cache, 348": {
    "model": "decoder_with_past_untied_int8.onnx",
    "positions": 348,
-   "median_ms": 9.3127000000095,
-   "min_ms": 9.021600000323815,
-   "max_ms": 9.628599999814469
+   "median_ms": 9.790699999939534,
+   "min_ms": 9.609900000214111,
+   "max_ms": 10.865500000363681
   }
  }
 }
