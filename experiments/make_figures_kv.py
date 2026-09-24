@@ -206,7 +206,7 @@ def step_time():
     ax.set_ylabel("Decoder step at t = 30, ms")
     ax.set_ylim(0, max(med) * 1.45)
     ax.set_title("(a) step time: median bar; min and max of 21 rounds as points", fontsize=8, loc="left")
-    ax.text(0.98, 0.97, "black: full cache (1500)\ngreen: calibrated retention", transform=ax.transAxes,
+    ax.text(0.98, 0.97, "black: full cache (1500)\nblue: hardware-selected (1433)\ngreen: calibrated retention", transform=ax.transAxes,
             ha="right", va="top", fontsize=6.6, color=DARK)
     ax.spines[["top", "right"]].set_visible(False)
     ax.tick_params(labelsize=7.5)
@@ -229,7 +229,7 @@ def step_time():
          plt.Line2D([], [], marker="o", ls="none", mfc="white", mec=ORANGE, mew=1.2, label="small, FP32 cache"),
          plt.Line2D([], [], color=GREY, lw=0.9, ls=(0, (5, 3)), label="one line per 64 B (predicted)")]
     ax2.legend(handles=h, frameon=False, fontsize=6.4, loc="upper left")
-    ax2.text(0.98, 0.04, "hollow: 1500 positions\nfilled: calibrated retention", transform=ax2.transAxes,
+    ax2.text(0.98, 0.04, "hollow: 1500 positions\nfilled: retained (393 / 348 / 1433)", transform=ax2.transAxes,
              ha="right", va="bottom", fontsize=6.4, color=DARK)
     ax2.set_ylim(0, None)
     ax2.spines[["top", "right"]].set_visible(False)
