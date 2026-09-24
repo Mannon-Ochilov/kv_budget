@@ -42,6 +42,7 @@ def build_arms():
         (f"medium  fp32 cache, {k_med}", f"{med}/decoder_with_past_untied_int8.onnx", 16, k_med),
         ("medium  int8 cache, 1500", f"{med}/decoder_with_past_cache_int.onnx", 16, ENC_POS),
         (f"medium  int8 cache, {k_med}", f"{med}/decoder_with_past_cache_int.onnx", 16, k_med),
+        ("medium  int8 cache, 1433", f"{med}/decoder_with_past_cache_int.onnx", 16, 1433),
         ("small   fp32 cache, 1500", f"{sml}/decoder_with_past_untied_int8.onnx", 12, ENC_POS),
         (f"small   fp32 cache, {k_sml}", f"{sml}/decoder_with_past_untied_int8.onnx", 12, k_sml),
     ]

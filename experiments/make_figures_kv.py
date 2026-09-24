@@ -184,13 +184,16 @@ def step_time():
     r = J("results_step_latency_evicted.json")["arms"]
     llc = J("results_llc_miss_step.json")
     mibs = {"medium  fp32 cache, 1500": 281.2, "medium  fp32 cache, 393": 73.7,
-            "medium  int8 cache, 1500": 70.3, "medium  int8 cache, 393": 18.4,
+            "medium  int8 cache, 1500": 70.3, "medium  int8 cache, 393": 18.4, "medium  int8 cache, 1433": 67.2,
             "small   fp32 cache, 1500": 105.5, "small   fp32 cache, 348": 24.5}
-    labels = list(r)
+    order = ["medium  fp32 cache, 1500", "medium  fp32 cache, 393", "medium  int8 cache, 1500",
+             "medium  int8 cache, 1433", "medium  int8 cache, 393", "small   fp32 cache, 1500",
+             "small   fp32 cache, 348"]
+    labels = [k for k in order if k in r]
     med = [r[k]["median_ms"] for k in labels]
-    cols = [DARK if r[k]["positions"] == 1500 else GREEN for k in labels]
+    cols = [DARK if r[k]["positions"] == 1500 else (BLUE if r[k]["positions"] == 1433 else GREEN) for k in labels]
     fig, (ax, ax2) = plt.subplots(1, 2, figsize=(6.69, 2.9), gridspec_kw={"width_ratios": [1.15, 1]})
-    x = np.array([0, 1, 2.4, 3.4, 4.8, 5.8])
+    x = np.array([0, 1, 2.4, 3.4, 4.4, 5.8, 6.8])
     ax.bar(x, med, width=0.8, color=cols, alpha=0.85)
     rng = np.random.default_rng(0)
     for xi, k, m in zip(x, labels, med):
@@ -199,10 +202,10 @@ def step_time():
                 mfc="white", mec=DARK, mew=0.6)
         ax.text(xi, max(runs) + 1.0, f"{m:.1f}", ha="center", fontsize=7)
         ax.text(xi, 0.6, f"{r[k]['positions']}\npos.", ha="center", va="bottom", fontsize=6.4, color="white")
-    ax.set_xticks([0.5, 2.9, 5.3], ["medium\nFP32 cache", "medium\nint8 cache", "small\nFP32 cache"])
+    ax.set_xticks([0.5, 3.4, 6.3], ["medium\nFP32 cache", "medium\nint8 cache", "small\nFP32 cache"])
     ax.set_ylabel("Decoder step at t = 30, ms")
     ax.set_ylim(0, max(med) * 1.45)
-    ax.set_title("(a) step time: median bar; min and max of 7 rounds as points", fontsize=8, loc="left")
+    ax.set_title("(a) step time: median bar; min and max of 21 rounds as points", fontsize=8, loc="left")
     ax.text(0.98, 0.97, "black: full cache (1500)\ngreen: calibrated retention", transform=ax.transAxes,
             ha="right", va="top", fontsize=6.6, color=DARK)
     ax.spines[["top", "right"]].set_visible(False)
