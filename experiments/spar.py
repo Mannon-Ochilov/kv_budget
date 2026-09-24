@@ -1,4 +1,4 @@
-"""E14 -- PadSink-KV (Padding Sink-Preserving Adaptive Retention; earlier working name SPAR).
+"""E14 -- PadSink-KV (Padding-Sink-Preserving Adaptive Retention; earlier working name SPAR).
 
 Two measured facts drive the rule. The padding sink is a threshold
 resource (Table 4 / Figure 5: a small set of padding positions carries 90%
