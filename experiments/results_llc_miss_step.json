@@ -58,5 +58,15 @@
   "llc_load_hits_per_step": 156399.42254663422,
   "llc_all_misses_per_step": 2129666.483373885,
   "llc_load_miss_rate": 0.8942485138981537
+ },
+ "medium  int8 cache, 1433": {
+  "model": "decoder_with_past_cache_int.onnx",
+  "positions": 1433,
+  "iterations": 365,
+  "ms_per_iter": 41.19,
+  "llc_load_misses_per_step": 3902734.3506849315,
+  "llc_load_hits_per_step": 560939.690410959,
+  "llc_all_misses_per_step": 6965414.435616438,
+  "llc_load_miss_rate": 0.8743322910126204
  }
 }
