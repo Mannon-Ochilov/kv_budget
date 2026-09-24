@@ -29,12 +29,12 @@
    "0.7": {
     "budget_kv_layer": 2.799999999999997,
     "hardware_point": [
-     18.41296875,
-     "int8 head, split"
+     67.171875,
+     "int8 head, K=1433"
     ],
     "hardware_point_any": [
-     35.15625,
-     "int4 KIVI, full"
+     67.171875,
+     "int8 head, K=1433"
     ],
     "max_gated": [
      8.7890625,
@@ -88,12 +88,12 @@
    "24": {
     "budget_kv_layer": 2.799999999999997,
     "hardware_point": [
-     18.41296875,
-     "int8 head, split"
+     67.171875,
+     "int8 head, K=1433"
     ],
     "hardware_point_any": [
-     35.15625,
-     "int4 KIVI, full"
+     67.171875,
+     "int8 head, K=1433"
     ],
     "max_gated": [
      8.7890625,
@@ -146,7 +146,8 @@
     "FP32, split (1.0, 0.1)": 0.23677049767275332,
     "int8 KIVI, split": 0.23263515932688864,
     "int4 KIVI, split": 0.2248657357679914,
-    "int8 head, split": 0.2214822771213749
+    "int8 head, split": 0.2214822771213749,
+    "int8 head, K=1433": 0.21922663802363046
    },
    "5-10 s": {
     "n": 167,
@@ -162,7 +163,8 @@
     "FP32, split (1.0, 0.1)": 0.16346208681538024,
     "int8 KIVI, split": 0.15984349981355972,
     "int4 KIVI, split": 0.1599120440437806,
-    "int8 head, split": 0.16287494940189548
+    "int8 head, split": 0.16287494940189548,
+    "int8 head, K=1433": 0.1595601504284139
    }
   }
  },
