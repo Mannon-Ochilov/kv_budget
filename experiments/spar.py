@@ -51,7 +51,7 @@ def sink_set(m_pad, rho):
     return order[:n]
 
 
-def spar_rule(k_i, real_n, rho, n_layers, dynamic=False):
+def spar_rule(k_i, real_n, rho, n_layers, dynamic=False, fill=False):
     def fn(mass, mass_l):
         keep, audio_need = {}, []
         sinks = []
@@ -67,7 +67,14 @@ def spar_rule(k_i, real_n, rho, n_layers, dynamic=False):
             audio_need = np.clip(np.round(share * total).astype(int), 1, real_n)
         for l in range(n_layers):
             a = np.argsort(-mass_l[l, :real_n])[:min(int(audio_need[l]), real_n)]
-            keep[l] = np.sort(np.concatenate([a, sinks[l]]))
+            kl = np.concatenate([a, sinks[l]])
+            if fill and len(kl) < k_i:
+                # budget larger than audio + sink: spend the rest on the next-heaviest padding
+                rest = np.setdiff1d(real_n + np.argsort(-mass_l[l, real_n:]), kl, assume_unique=False)
+                order = real_n + np.argsort(-mass_l[l, real_n:])
+                rest = order[~np.isin(order, kl)][:k_i - len(kl)]
+                kl = np.concatenate([kl, rest])
+            keep[l] = np.sort(kl)
         return keep
     return fn
 
