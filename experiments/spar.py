@@ -96,6 +96,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--setup", default="medium_uz", choices=list(SETUPS))
     ap.add_argument("--phase", default="both", choices=["test", "valid", "both"])
+    ap.add_argument("--rho", type=float, default=0.9, help="rho for the test phase (validation-selected)")
     args = ap.parse_args()
     setup = SETUPS[args.setup]
     e6 = json.load(open(os.path.join(HERE, f"results_eviction_budget_{setup.name}.json")))
@@ -132,7 +133,7 @@ def main():
         full = e6["test"]["full"]
         split = e6["test"][[k for k in e6["test"] if k.startswith("split")][0]]
         t = res.setdefault("test", {})
-        for rho, dyn in ((0.9, False), (0.9, True)):
+        for rho, dyn in ((args.rho, False), (args.rho, True)):
             name = f"spar{'_dyn' if dyn else ''}/rho{rho}"
             if name in t:
                 continue
