@@ -64,6 +64,26 @@ SETUPS = {
         {"test": os.path.join(ROOT, "models", "_calib_cache", "ls_test_clean.npz"),
          "validation": os.path.join(ROOT, "models", "_calib_cache", "ls_dev_clean.npz")},
         "en", 12, 768, "en"),
+    # navai-uz/whisper-small-uzbek: whisper-small fine-tuned for Uzbek (Apache-2.0),
+    # FP32 encoder; same Common Voice uz splits as medium_uz
+    "small_uz": Setup(
+        "small_uz", os.path.join(ROOT, "models", "whisper_small_uz_hf"),
+        os.path.join(ROOT, "models", "whisper_small_uz_onnx", "encoder_model.onnx"),
+        os.path.join(ROOT, "models", "whisper_small_uz_onnx", "decoder_model_int8.onnx"),
+        os.path.join(ROOT, "models", "whisper_small_uz_onnx", "decoder_with_past_untied_int8.onnx"),
+        {"test": os.path.join(NNOPT, "models", "_calib_cache", "cv_uz_test.npz"),
+         "validation": os.path.join(NNOPT, "models", "_calib_cache", "cv_uz_validation.npz")},
+        "uz", 12, 768, "uz"),
+    # openai/whisper-medium, original multilingual checkpoint, no fine-tuning:
+    # same size as medium_uz, same language/benchmark as small_en
+    "medium_en": Setup(
+        "medium_en", os.path.join(ROOT, "models", "whisper_medium_en_hf"),
+        os.path.join(ROOT, "models", "whisper_medium_en_onnx", "encoder_model.onnx"),
+        os.path.join(ROOT, "models", "whisper_medium_en_onnx", "decoder_model_int8.onnx"),
+        os.path.join(ROOT, "models", "whisper_medium_en_onnx", "decoder_with_past_untied_int8.onnx"),
+        {"test": os.path.join(ROOT, "models", "_calib_cache", "ls_test_clean.npz"),
+         "validation": os.path.join(ROOT, "models", "_calib_cache", "ls_dev_clean.npz")},
+        "en", 24, 1024, "en"),
 }
 
 
