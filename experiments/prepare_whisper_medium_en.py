@@ -1,21 +1,20 @@
-"""Third model: openai/whisper-medium (original, English, no fine-tuning) on the same LibriSpeech subsets.
+"""Third model: openai/whisper-medium (original multilingual checkpoint, no
+fine-tuning), run in English on the same LibriSpeech subsets as small_en.
 
-Everything so far is Whisper-medium fine-tuned for Uzbek on one CPU. A
-reviewer's first question is whether the padding-sink effect (E5) and the
-precision headroom (E1) are properties of that one model. This brings in
-openai/whisper-small (12 decoder layers, d = 768, the same 1500-position
-encoder cache) and LibriSpeech test-clean / dev-clean, in exactly the file
-formats the existing scripts read:
+Same size as the Uzbek Whisper-medium (24 decoder layers, d = 1024), same
+language and benchmark as small_en, so it separates model size from
+language / fine-tuning in the 2x2 design. The checkpoint is the unmodified
+Hugging Face release (model.safetensors sha256 62f73550...b47fd28, verified
+against the hub); the only change is ours: ONNX export and the dynamic INT8
+decoder, exactly as for the other models.
 
-  models/whisper_small_hf/            HF checkpoint
-  models/whisper_small_onnx/          optimum export, with past
-      decoder_model.onnx, decoder_with_past_model.onnx, encoder_model.onnx
+  models/whisper_medium_en_hf/        HF checkpoint (openai/whisper-medium)
+  models/whisper_medium_en_onnx/      optimum export, with past
       decoder_model_int8.onnx, decoder_with_past_untied_int8.onnx
-  models/_calib_cache/ls_test_clean.npz    300 utterances, test-clean
-  models/_calib_cache/ls_dev_clean.npz     100 utterances, dev-clean
-                                           (same audio/lengths/texts layout)
+  models/_calib_cache/ls_test_clean.npz    300 utterances, test-clean (shared)
+  models/_calib_cache/ls_dev_clean.npz     100 utterances, dev-clean  (shared)
 
-Usage:  python experiments/prepare_whisper_small.py
+Usage:  python experiments/prepare_whisper_medium_en.py
 """
 
 import io
