@@ -42,6 +42,13 @@ Pre-registered predictions (before the run):
   before the test; v1 numbers are kept in the json as arms_v1.
   P7  v2 removes most loops: at 0.5*K_i the number of WER>1 utterances on
       the small_en / small_uz test is below v1's (1 / 5).
+  v2 result: 0.5*K_i accepted on small_en, small_uz, medium_uz; medium_en
+  +0.022 rejected. D4 (track_coverage.py): medium_en puts 35% of its
+  attention on padding outside sink + window (medium_uz 17%).
+  track_sum adds one summary slot for that padding (mean K/V, bias log n,
+  exactly n identical copies; the slot is paid from the window).
+  P8  track_sum at 0.5*K_i passes on medium_en and on all four models;
+      at 0.25*K_i it improves on track on at least three models.
 
 Usage:  python experiments/align_track.py --setup small_en [--n 300]
 """
@@ -55,7 +62,7 @@ import numpy as np
 
 from diag_budget import RHO
 from eviction_budget import EPS, keep_split
-from kvlib import (ENC_POS, EOT, MAX_NEW, SEED, SETUPS, SOT, encoder_states,
+from kvlib import (with_cross_bias, ENC_POS, EOT, MAX_NEW, SEED, SETUPS, SOT, encoder_states,
                    error_rate, paired_ci, prompt_ids, real_positions, session,
                    text_norm, with_attention)
 from spar import SINK_CAP, sink_set
@@ -72,7 +79,7 @@ def align_heads(setup):
     return [tuple(x) for x in g["alignment_heads"]]
 
 
-def track_greedy(setup, first, step_attn, enc, prompt, k, rn, heads, heavy, back=BACK, peak="align", cap=TRACK_CAP):
+def track_greedy(setup, first, step_attn, enc, prompt, k, rn, heads, heavy, back=BACK, peak="align", cap=TRACK_CAP, summary=False):
     ids = [SOT, *prompt]
     out = first.run(None, {"input_ids": np.array([ids], dtype=np.int64),
                            "encoder_hidden_states": np.ascontiguousarray(enc[None])})
@@ -90,6 +97,17 @@ def track_greedy(setup, first, step_attn, enc, prompt, k, rn, heads, heavy, back
         m = att[l].sum(0)
         s = rn + sink_set(m[rn:], RHO[setup.name])
         sinks.append(np.sort(s[:max(1, int(cap * k))]))
+    if summary:
+        # D4: the padding outside the sink is replaceable by its mean (sink
+        # causal test, pad_rest_mean accepted on all models) -> one slot with
+        # the mean K/V and bias log(n) == n identical copies. Sums over the
+        # padding are formed once; window/padding overlap is subtracted per step.
+        rest0, sumk, sumv = [], [], []
+        for l in range(L):
+            r = np.setdiff1d(np.arange(rn, ENC_POS), sinks[l])
+            rest0.append(r)
+            sumk.append(cross[f"present.{l}.encoder.key"][:, :, r, :].sum(axis=2, keepdims=True))
+            sumv.append(cross[f"present.{l}.encoder.value"][:, :, r, :].sum(axis=2, keepdims=True))
     a0 = sum(att[l][h, :rn] for l, h in heads)
     c = int(np.argmax(a0))
     mass_audio = sum(att[l].sum(0)[:rn] for l in range(L))
@@ -105,7 +123,7 @@ def track_greedy(setup, first, step_attn, enc, prompt, k, rn, heads, heavy, back
         ids.append(nxt)
         keep = {}
         for l in range(L):
-            w = max(1, k - len(sinks[l]))
+            w = max(1, k - len(sinks[l]) - (1 if summary else 0))   # the summary slot counts
             fixed = np.array([], dtype=int)
             if heavy:
                 nh = int(HEAVY * w)
@@ -122,7 +140,18 @@ def track_greedy(setup, first, step_attn, enc, prompt, k, rn, heads, heavy, back
             if n.startswith("past_key_values"):
                 pn = "present" + n[len("past_key_values"):]
                 if ".encoder." in pn:
-                    feed[n] = np.ascontiguousarray(cross[pn][:, :, keep[int(pn.split(".")[1])], :])
+                    l = int(pn.split(".")[1])
+                    x = cross[pn][:, :, keep[l], :]
+                    if summary:
+                        ov = keep[l][np.isin(keep[l], rest0[l])]
+                        tot = (sumk if pn.endswith("key") else sumv)[l]
+                        nr = len(rest0[l]) - len(ov)
+                        mean = (tot - cross[pn][:, :, ov, :].sum(axis=2, keepdims=True)) / max(nr, 1)
+                        x = np.concatenate([x, mean.astype(x.dtype)], axis=2)
+                        bias = np.zeros((1, 1, 1, len(keep[l]) + 1), np.float32)
+                        bias[..., -1] = np.log(nr) if nr > 0 else -1e4
+                        feed[f"cross_bias.{l}"] = bias
+                    feed[n] = np.ascontiguousarray(x)
                 else:
                     feed[n] = present[pn]
         res = step_attn.run(None, feed)
@@ -134,13 +163,13 @@ def track_greedy(setup, first, step_attn, enc, prompt, k, rn, heads, heavy, back
         score = np.zeros(ENC_POS)
         if peak == "align":
             for l, h in heads:
-                np.add.at(score, keep[l], res[att_idx[l]][0, h, -1, :])
+                np.add.at(score, keep[l], res[att_idx[l]][0, h, -1, :len(keep[l])])
         else:  # all heads of all layers
             for l in range(L):
-                np.add.at(score, keep[l], res[att_idx[l]][0, :, -1, :].sum(0))
+                np.add.at(score, keep[l], res[att_idx[l]][0, :, -1, :len(keep[l])].sum(0))
         score[rn:] = 0
         c = max(c, int(np.argmax(score)))
-        kept.append(np.mean([len(x) for x in keep.values()]))
+        kept.append(np.mean([len(x) for x in keep.values()]) + (1 if summary else 0))
         nxt = int(np.argmax(logits[0, -1]))
     return ids[1 + len(prompt):], float(np.mean(kept)) if kept else float(k)
 
@@ -170,16 +199,18 @@ def main():
     step_attn = session(with_attention(setup.step))
 
     res["config"] = {"version": 2, "back": BACK, "sink_cap": TRACK_CAP, "peak": "alignment_heads", "rho": RHO[setup.name]}
+    step_bias = session(with_cross_bias(setup.step))
     for s in SCALES:
-        for heavy in (False,):
-            name = f"track/s{s}"
+        for heavy in (False, "sum"):
+            name = f"track{'_sum' if heavy else ''}/s{s}"
             if name in res["arms"] and res["arms"][name]["n"] == args.n:
                 continue
             wers, kept, t0 = [], [], time.time()
             for i in range(args.n):
                 rn = real_positions(waves[i])
                 k = max(1, int(round(s * len(keep_split(f_r, f_p, rn)(np.zeros(ENC_POS))))))
-                ids, kk = track_greedy(setup, first, step_attn, states[i], prompt, k, rn, heads, heavy)
+                ids, kk = (track_greedy(setup, first, step_bias, states[i], prompt, k, rn, heads, False, summary=True) if heavy
+                            else track_greedy(setup, first, step_attn, states[i], prompt, k, rn, heads, False))
                 wers.append(error_rate(refs[i], norm(tok.decode(ids, skip_special_tokens=True)).split()))
                 kept.append(kk)
             d = paired_ci(wers, full["per_sample_wer"][:args.n], np.random.default_rng(SEED))
@@ -214,15 +245,18 @@ def tune(args):
     # second round: the sink reservation (60% of k) leaves ~35 audio frames at 0.25*K_i
     grid += [(s, "align", back, cap) for s in SCALES for back in (0.0, 0.1) for cap in (0.1, 0.25)]
     grid += [(s, "align", BACK, TRACK_CAP, "v2") for s in SCALES]
+    grid += [(s, "align", BACK, TRACK_CAP, "v2", "sum") for s in SCALES]
+    step_bias = session(with_cross_bias(setup.step))
     for s, peak, back, cap, *ver in grid:
-                name = f"track/s{s}/{peak}/b{back}" + (f"/cap{cap}" if cap != SINK_CAP else "") + ("/v2" if ver else "")
+                name = f"track/s{s}/{peak}/b{back}" + (f"/cap{cap}" if cap != SINK_CAP else "") + ("/v2" if ver else "") + ("/sum" if len(ver) > 1 else "")
                 if name in v:
                     continue
                 wers, t0 = [], time.time()
                 for i in range(100):
                     rn = real_positions(waves[i])
                     k = max(1, int(round(s * len(keep_split(f_r, f_p, rn)(np.zeros(ENC_POS))))))
-                    ids, _ = track_greedy(setup, first, step_attn, states[i], prompt, k, rn, heads, False, back, peak, cap)
+                    ids, _ = track_greedy(setup, first, step_bias if len(ver) > 1 else step_attn, states[i], prompt, k, rn, heads,
+                                          False, back, peak, cap, summary=len(ver) > 1)
                     wers.append(error_rate(refs[i], norm(tok.decode(ids, skip_special_tokens=True)).split()))
                 d = paired_ci(wers, calib[:100], np.random.default_rng(SEED))
                 v[name] = {"wer": float(np.mean(wers)), "per_sample_wer": wers, "delta_vs_full": list(d)}
