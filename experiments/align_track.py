@@ -79,7 +79,8 @@ def align_heads(setup):
     return [tuple(x) for x in g["alignment_heads"]]
 
 
-def track_greedy(setup, first, step_attn, enc, prompt, k, rn, heads, heavy, back=BACK, peak="align", cap=TRACK_CAP, summary=False):
+def track_greedy(setup, first, step_attn, enc, prompt, k, rn, heads, heavy, back=BACK, peak="align", cap=TRACK_CAP, summary=False,
+                 rate=None, clip_rn=False, cache_fn=None):
     ids = [SOT, *prompt]
     out = first.run(None, {"input_ids": np.array([ids], dtype=np.int64),
                            "encoder_hidden_states": np.ascontiguousarray(enc[None])})
@@ -87,6 +88,13 @@ def track_greedy(setup, first, step_attn, enc, prompt, k, rn, heads, heavy, back
     logits = out[names.index("logits")]
     present = {n: v for n, v in zip(names, out) if n.startswith("present")}
     cross = {n: v for n, v in present.items() if ".encoder." in n}
+    if cache_fn is not None:
+        # the whole cross cache is stored quantized (scales over all 1500
+        # positions, as it would sit in DRAM); the decoder's own cache is
+        # quantized after every step, as in the one-shot combo arms
+        for l in range(setup.n_layers):
+            kn, vn = f"present.{l}.encoder.key", f"present.{l}.encoder.value"
+            cross[kn], cross[vn] = cache_fn(cross[kn], cross[vn])
     att = {}
     for n, v in zip(names, out):
         if "encoder_attn" in n and n.endswith("Softmax_output_0"):
@@ -96,7 +104,7 @@ def track_greedy(setup, first, step_attn, enc, prompt, k, rn, heads, heavy, back
     for l in range(L):
         m = att[l].sum(0)
         s = rn + sink_set(m[rn:], RHO[setup.name])
-        sinks.append(np.sort(s[:max(1, int(cap * k))]))
+        sinks.append(np.sort(s[:max(1, int(cap * k)) if cap > 0 else 0]).astype(int))
     if summary:
         # D4: the padding outside the sink is replaceable by its mean (sink
         # causal test, pad_rest_mean accepted on all models) -> one slot with
@@ -109,7 +117,8 @@ def track_greedy(setup, first, step_attn, enc, prompt, k, rn, heads, heavy, back
             sumk.append(cross[f"present.{l}.encoder.key"][:, :, r, :].sum(axis=2, keepdims=True))
             sumv.append(cross[f"present.{l}.encoder.value"][:, :, r, :].sum(axis=2, keepdims=True))
     a0 = sum(att[l][h, :rn] for l, h in heads)
-    c = int(np.argmax(a0))
+    c = c0 = int(np.argmax(a0))
+    t_step = 0
     mass_audio = sum(att[l].sum(0)[:rn] for l in range(L))
     s_in = [i.name for i in step_attn.get_inputs()]
     s_out = [o.name for o in step_attn.get_outputs()]
@@ -132,8 +141,12 @@ def track_greedy(setup, first, step_attn, enc, prompt, k, rn, heads, heavy, back
             # v2: the window may run past the end of speech into the padding --
             # the frames right after speech are what tells the decoder to stop
             # (v1 clipped it at rn: at the end the peak jumped back and looped)
-            lo = int(np.clip(c - int(back * w), 0, max(0, ENC_POS - w)))
-            win = np.arange(lo, min(ENC_POS, lo + w))
+            if clip_rn:   # v1: window confined to the speech
+                lo = int(np.clip(c - int(back * w), 0, max(0, rn - w)))
+                win = np.arange(lo, min(rn, lo + w))
+            else:
+                lo = int(np.clip(c - int(back * w), 0, max(0, ENC_POS - w)))
+                win = np.arange(lo, min(ENC_POS, lo + w))
             keep[l] = np.unique(np.concatenate([win, fixed, sinks[l]]).astype(int))
         feed = {"input_ids": np.array([[nxt]], dtype=np.int64)}
         for n in s_in:
@@ -159,6 +172,10 @@ def track_greedy(setup, first, step_attn, enc, prompt, k, rn, heads, heavy, back
         for n, v in zip(s_out, res):
             if n.startswith("present") and ".decoder." in n:
                 present[n] = v
+        if cache_fn is not None:
+            for l in range(L):
+                kn, vn = f"present.{l}.decoder.key", f"present.{l}.decoder.value"
+                present[kn], present[vn] = cache_fn(present[kn], present[vn])
         # alignment peak over the audio positions actually held
         score = np.zeros(ENC_POS)
         if peak == "align":
@@ -168,7 +185,13 @@ def track_greedy(setup, first, step_attn, enc, prompt, k, rn, heads, heavy, back
             for l in range(L):
                 np.add.at(score, keep[l], res[att_idx[l]][0, :, -1, :len(keep[l])].sum(0))
         score[rn:] = 0
-        c = max(c, int(np.argmax(score)))
+        t_step += 1
+        if peak == "fixed":       # MURMUR-style: the window advances at a fixed rate
+            c = int(c0 + rate * t_step)
+        elif peak == "static":    # the window never moves (a one-shot window)
+            c = c0
+        else:
+            c = max(c, int(np.argmax(score)))
         kept.append(np.mean([len(x) for x in keep.values()]) + (1 if summary else 0))
         nxt = int(np.argmax(logits[0, -1]))
     return ids[1 + len(prompt):], float(np.mean(kept)) if kept else float(k)
