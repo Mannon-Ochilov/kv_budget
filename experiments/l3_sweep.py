@@ -15,8 +15,9 @@ The oracle is listed apart (not realizable).
 
 For each (model, M_L3) the table gives k_max and, per family, the
 least-aggressive admitted candidate that passes the gate (U < delta).
-INT8 caches would multiply k_max by 4; they are not in the sweep because
-PadSink-Track has not been measured with an INT8 cache.
+INT8 per-head caches count a quarter of the bytes per position: one-shot
+int8 arms (medium_uz: split + int8 head, the K = 1433 boundary point) and
+PadSink-Track with the int8 cache (track_ablation.py) are candidates too.
 
 Usage:  python experiments/l3_sweep.py
 """
@@ -38,7 +39,7 @@ def J(n):
 
 
 def candidates(m):
-    """(family, label, k, [d, lo, hi])"""
+    """(family, label, k, [d, lo, hi], bits)"""
     C = []
     e6 = J(f"results_eviction_budget_{m}.json")["test"]
     C.append(("full", "full cache", 1500, [0, 0, 0]))
@@ -54,7 +55,18 @@ def candidates(m):
         C.append((fam, k.replace("/s", " "), v["kept"], v["delta_vs_full"]))
     for k, v in J(f"results_align_track_{m}.json").get("arms", {}).items():
         C.append(("track", k.replace("/s", " "), v["kept"], v["delta_vs_full"]))
-    return C
+    k_i = e6[sk]["kept"]
+    for k, v in J(f"results_track_ablation_{m}.json").get("arms", {}).items():
+        if k.startswith("track"):
+            sc = float(k.split("/s")[1])
+            C.append(("track", k.replace("/s", " "), sc * k_i, v["delta_vs_full"], 8 if "int8" in k else 32))
+    cb = J(f"results_eviction_combo_{m}.json").get("arms", {}).get("split/int8_head")
+    if cb:
+        C.append(("one-shot", "split int8 K_i", cb["kept"], cb["delta_vs_full"], 8))
+    bd = J(f"results_boundary_int8_{m}.json")
+    if bd:
+        C.append(("one-shot", "int8 head K=1433", bd["K"], bd["delta_vs_full"], 8))
+    return [c if len(c) == 5 else c + (32,) for c in C]
 
 
 def main():
@@ -72,14 +84,23 @@ def main():
             k_max = int(head / slot) if head > 0 else 0
             pick = {}
             for fam in ("full", "one-shot", "track", "oracle"):
-                ok = [c for c in C if c[0] == fam and c[2] <= k_max and round(c[3][2], 4) < delta]
-                pick[fam] = max(ok, key=lambda c: c[2]) if ok else None
+                # admitted if its bytes fit: k * bits/32 FP32-equivalent positions
+                ok = [c for c in C if c[0] == fam and c[2] * c[4] / 32 <= k_max and round(c[3][2], 4) < delta]
+                pick[fam] = max(ok, key=lambda c: c[2] * c[4] / 32) if ok else None
             best_os = pick["full"] or pick["one-shot"]
             fmt = lambda c: f"{c[1]} (k={c[2]:.0f}, {c[3][0]:+.4f})" if c else "-- none --"
             print(f"{l3:>5} {k_max:>6}   {fmt(best_os):<38} {fmt(pick['track']):<30} {fmt(pick['oracle'])}")
             rows.append({"l3": l3, "k_max": k_max,
                          **{f: (list(pick[f][1:3]) + [pick[f][3][0]] if pick[f] else None) for f in pick}})
-        out[m] = {"delta": delta, "rows": rows}
+        # the smallest L3 at which each family has an admitted, passing configuration
+        need = {}
+        for fam in ("one-shot", "track", "oracle"):
+            ok = [c for c in C if c[0] in (fam, "full" if fam == "one-shot" else fam) and round(c[3][2], 4) < delta]
+            if ok:
+                c = min(ok, key=lambda c: c[2] * c[4] / 32)
+                need[fam] = [(W_LAYER[m] + c[2] * c[4] / 32 * slot) / ALPHA, c[1], c[2], c[4]]
+                print(f"  minimal L3 {fam:<9} {need[fam][0]:5.1f} MiB  via {c[1]} (k={c[2]:.0f}, {c[4]}-bit, {c[3][0]:+.4f})")
+        out[m] = {"delta": delta, "rows": rows, "min_l3": need}
     json.dump(out, open(os.path.join(HERE, "results_l3_sweep.json"), "w"), indent=1)
 
 
