@@ -240,3 +240,26 @@ def greedy(setup, first, step, enc, prompt, keep_fn, cache_fn):
 
 def cache_mib(setup, positions, bits):
     return setup.n_layers * 2 * positions * setup.d_model * bits / 8 / 1024 ** 2
+
+
+def with_cross_bias(step_path):
+    """The with-past step graph with an additive bias on every cross-attention
+    score row (input cross_bias.{l}, shape [1, 1, 1, k]) and the Softmax
+    outputs exposed. Used for a summary slot standing for n identical keys:
+    bias log(n) on it gives exactly the attention of the n copies."""
+    src = with_attention(step_path)
+    dst = step_path.replace(".onnx", "_attn_bias.onnx")
+    if not os.path.exists(dst):
+        m = onnx.load(src, load_external_data=False)
+        for n in list(m.graph.node):
+            if n.op_type == "Softmax" and "encoder_attn" in n.name:
+                layer = int(n.name.split("layers.")[1].split("/")[0])
+                b = f"cross_bias.{layer}"
+                m.graph.input.append(onnx.helper.make_tensor_value_info(
+                    b, onnx.TensorProto.FLOAT, [1, 1, 1, f"k{layer}"]))
+                add_out = n.input[0] + "_biased"
+                m.graph.node.insert(list(m.graph.node).index(n), onnx.helper.make_node(
+                    "Add", [n.input[0], b], [add_out], name=n.name + "_bias"))
+                n.input[0] = add_out
+        onnx.save(m, dst)
+    return dst
