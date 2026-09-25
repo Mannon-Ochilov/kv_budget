@@ -73,7 +73,7 @@ SETUPS = {
         os.path.join(ROOT, "models", "whisper_small_uz_onnx", "decoder_with_past_untied_int8.onnx"),
         {"test": os.path.join(NNOPT, "models", "_calib_cache", "cv_uz_test.npz"),
          "validation": os.path.join(NNOPT, "models", "_calib_cache", "cv_uz_validation.npz")},
-        "uz", 12, 768, "uz"),
+        "uz", 12, 768, "uz_apos"),
     # openai/whisper-medium, original multilingual checkpoint, no fine-tuning:
     # same size as medium_uz, same language/benchmark as small_en
     "medium_en": Setup(
@@ -106,9 +106,20 @@ def load_audio(path, n):
     return waves, list(texts[:n])
 
 
+APOSTROPHES = "‘’ʻʼ`´"
+
+
 def text_norm(setup):
     if setup.normalizer == "uz":
         return normalize
+    if setup.normalizer == "uz_apos":
+        # the paper's normalizer, after mapping every apostrophe variant
+        # (oʻ, g‘, ...) to ASCII ' -- models differ in which one they emit
+        def fn(s):
+            for c in APOSTROPHES:
+                s = s.replace(c, "'")
+            return normalize(s)
+        return fn
     from transformers.models.whisper.english_normalizer import BasicTextNormalizer
     bn = BasicTextNormalizer()
     return lambda s: " ".join(bn(s).split())
