@@ -364,6 +364,107 @@ def fig_efficiency():
     save(fig, "fig_t6_efficiency")
 
 
+# ------------------------------------------------------------------ figure 1 (full method figure)
+def fig_method_full():
+    fig, ax = plt.subplots(figsize=(FULL, 11.0 * CM))
+    ax.set_xlim(0, 100)
+    ax.set_ylim(0, 64)
+    ax.axis("off")
+    T, P, RN = 14, 40, 20                        # schematic: steps, positions, speech positions
+    rng = np.random.default_rng(7)
+    need = np.clip(np.round(np.linspace(1, RN - 2, T) + rng.normal(0, 0.5, T)), 0, RN - 1).astype(int)
+    sinks = np.array([RN + 1, RN + 2, RN + 5, RN + 9, RN + 14])
+
+    def grid(x0, title):
+        gw, y_top, y_bot = 27.0, 55.0, 34.0
+        cw, rh = gw / P, (y_top - y_bot) / T
+        ax.add_patch(Rectangle((x0, y_bot), RN * cw, y_top - y_bot, fc="#e6eff9", ec="none"))
+        ax.add_patch(Rectangle((x0 + RN * cw, y_bot), (P - RN) * cw, y_top - y_bot, fc="#f2f1ec", ec="none"))
+        ax.add_patch(Rectangle((x0, y_bot), gw, y_top - y_bot, fc="none", ec=INK2, lw=0.5))
+        ax.text(x0, 62.5, title[0], fontsize=7.5, color=INK, va="top")
+        ax.text(x0, 59.9, title[1], fontsize=6.5, color=INK2, va="top")
+        ax.text(x0 + RN * cw / 2, y_bot - 1.2, "speech", fontsize=6.5, color=INK2, ha="center", va="top")
+        ax.text(x0 + RN * cw + (P - RN) * cw / 2, y_bot - 1.2, "padding (≈ 80 %)", fontsize=6.5, color=INK2,
+                ha="center", va="top")
+        ax.text(x0 - 0.6, y_top - rh / 2, "t = 1", fontsize=6, color=INK2, ha="right", va="center")
+        ax.text(x0 - 0.6, y_bot + rh / 2, f"t = {T}", fontsize=6, color=INK2, ha="right", va="center")
+        ax.annotate("", xy=(x0 - 3.2, y_bot + 1), xytext=(x0 - 3.2, y_top - 1),
+                    arrowprops=dict(arrowstyle="-|>", color=MUTED, lw=0.6))
+        ax.text(x0 + gw / 2, y_top + 0.8, "encoder positions →", fontsize=6, color=MUTED, ha="center", va="bottom")
+        cx = lambda p_: x0 + (p_ + 0.5) * cw                       # noqa: E731
+        cy = lambda t_: y_top - (t_ + 0.5) * rh                    # noqa: E731
+        return cw, rh, cx, cy, y_top, y_bot
+
+    # (a) one-shot
+    cw, rh, cx, cy, yt, yb = grid(3, ("(a) One-shot retention", "H2O, SnapKV, PyramidKV, PadSink-KV"))
+    kept = np.unique(np.concatenate([[0, 1, 2, 3, 5, 6], sinks]))
+    for p_ in kept:
+        ax.add_patch(Rectangle((cx(p_) - cw * 0.42, yb), cw * 0.84, yt - yb, fc=GREYS["h2o_layer"], alpha=0.8, ec="none"))
+    for t_, p_ in enumerate(need):
+        hit = p_ in kept
+        ax.plot(cx(p_), cy(t_), marker="o" if hit else "x", ms=3.4 if hit else 3.8,
+                color=INK if hit else "#d23b3b", mew=1.2, zorder=3)
+    # (b) track
+    cw, rh, cx, cy, yt, yb = grid(36, ("(b) PadSink-Track", "the selection is renewed at every step"))
+    w = 7
+    for t_, p_ in enumerate(need):
+        lo = int(np.clip(p_ - 1, 0, P - w))
+        ax.add_patch(Rectangle((cx(lo) - cw / 2, cy(t_) - rh * 0.45), w * cw, rh * 0.9, fc=BLUE, alpha=0.3, ec="none"))
+    for p_ in sinks:
+        ax.add_patch(Rectangle((cx(p_) - cw * 0.42, yb), cw * 0.84, yt - yb, fc=ORANGE, alpha=0.85, ec="none"))
+    for t_, p_ in enumerate(need):
+        ax.plot(cx(p_), cy(t_), marker="o", ms=3.4, color=INK, zorder=3)
+    # legend
+    items = [(INK, "o", "position the decoder needs at step t"),
+             ("#d23b3b", "x", "needed but evicted → errors, loops"),
+             (GREYS["h2o_layer"], "s", "one-shot set: chosen at t = 1, fixed"),
+             (BLUE, "s", "window $W_t$: follows the alignment peak"),
+             (ORANGE, "s", r"padding sink $S_\ell$: exact K/V, fixed")]
+    for n, (col, mk, txt) in enumerate(items):
+        y = 54 - n * 4.4
+        ax.plot(71.5, y, marker=mk, ms=6 if mk == "s" else 4.2, color=col, mew=1.2, alpha=0.85 if mk == "s" else 1)
+        ax.text(73.5, y, txt, fontsize=6.5, color=INK, va="center")
+
+    # (c) the step loop
+    ax.text(3, 28.5, "(c) One decoding step of PadSink-Track", fontsize=7.5, color=INK, va="bottom")
+
+    def box(x, y, wdt, h, txt, ec=INK2):
+        ax.add_patch(FancyBboxPatch((x, y), wdt, h, boxstyle="round,pad=0.35,rounding_size=0.8", fc="white", ec=ec, lw=0.7))
+        ax.text(x + wdt / 2, y + h / 2, txt, ha="center", va="center", fontsize=6.0, color=INK, linespacing=1.35)
+
+    yb2, h2 = 14.5, 11.5
+    boxes = [(3, 17.6, "once, at t = 1\n(full cache):\n" r"sink $S_\ell$ = smallest set" "\n"
+              "with ρ of padding mass;\n" r"start peak $c_1$", ORANGE),
+             (23.4, 17.4, r"ring buffer $B_\ell = W_t \cup S_\ell$" "\nk positions per layer;\n"
+              "the full cache\nstays in DRAM", BLUE),
+             (43.6, 12.6, "decoder step t\n" r"reads only $B_\ell$" "\n" r"→ token $y_t$", INK2),
+             (58.9, 19.8, "alignment heads'\n" r"attention over $W_t$ → peak;" "\n"
+              r"$c_{t+1} = \max(c_t, \mathrm{peak})$", INK2),
+             (81.4, 16.2, "shift the window to\n" r"$[c-0.1w,\ c+0.9w)$;" "\n"
+              "at the end of speech\nit runs into padding", INK2)]
+    for x, wdt, txt, ec in boxes:
+        box(x, yb2, wdt, h2, txt, ec)
+    for (x1, w1, *_), (x2, *_r) in zip(boxes[:-1], boxes[1:]):
+        ax.annotate("", xy=(x2 - 0.6, yb2 + h2 / 2), xytext=(x1 + w1 + 0.6, yb2 + h2 / 2),
+                    arrowprops=dict(arrowstyle="-|>", color=INK2, lw=0.8))
+    ax.annotate("", xy=(32.1, yb2 - 0.8), xytext=(89.5, yb2 - 0.8),
+                arrowprops=dict(arrowstyle="-|>", color=INK2, lw=0.8, connectionstyle="arc3,rad=-0.09"))
+    ax.text(59.8, 9.2, "next step", fontsize=6.3, color=INK2, ha="center", va="top")
+    # ring buffer slots
+    x0, y0, sw = 3, 0.8, 3.0
+    labels = ["109", "110", "103", "104", "105", "106", "107", "108", "s", "s", "s"]
+    for n, lab in enumerate(labels):
+        fc = "#f7d9cc" if lab == "s" else ("#fde0d2" if n < 2 else "#dbe8f7")
+        ax.add_patch(Rectangle((x0 + n * sw, y0), sw * 0.94, 3.2, fc=fc, ec=INK2, lw=0.4))
+        ax.text(x0 + n * sw + sw * 0.47, y0 + 1.6, lab, fontsize=5.0, ha="center", va="center",
+                color=ORANGE if n < 2 else INK)
+    ax.text(x0 + 11 * sw + 1.2, y0 + 1.6,
+            "ring buffer of one layer: the slots of positions 101, 102 that left the window are overwritten with the entering "
+            "109, 110 (0–3 slots per step,\nno per-step gather); s = sink slots. Attention ignores slot order, so the result equals "
+            "reading the positions in order.", fontsize=6, color=INK2, va="center")
+    save(fig, "fig_t1_method")
+
+
 # ------------------------------------------------------------------ figure 7
 def fig_long():
     sets = [("small_en_long", "(a) Whisper-small, English, ≥ 10 s (n = 80)"),
@@ -411,7 +512,7 @@ def fig_long():
 
 if __name__ == "__main__":
     fig_long()
-    fig_method()
+    fig_method_full()
     fig_padding()
     fig_budget()
     fig_trace()
