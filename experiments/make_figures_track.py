@@ -22,6 +22,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.ticker  # noqa: E402,F401
 import numpy as np  # noqa: E402
 from matplotlib.patches import FancyBboxPatch, Rectangle  # noqa: E402
 
@@ -363,7 +364,53 @@ def fig_efficiency():
     save(fig, "fig_t6_efficiency")
 
 
+# ------------------------------------------------------------------ figure 7
+def fig_long():
+    sets = [("small_en_long", "(a) Whisper-small, English, ≥ 10 s (n = 80)"),
+            ("medium_uz_long", "(b) Whisper-medium, Uzbek, 15–30 s composites (n = 89)")]
+    fig, axs = plt.subplots(1, 2, figsize=(FULL, 6.2 * CM), sharey=True)
+    style = {"h2o_layer": dict(color=GREYS["h2o_layer"], marker="v", label="H2O per layer (one-shot)"),
+             "padsink": dict(color=ORANGE, marker="o", label="PadSink-KV (one-shot)"),
+             "track": dict(color=BLUE, marker="o", label="PadSink-Track", lw=2.0)}
+    for ax, (name, title) in zip(axs, sets):
+        r = J(f"results_long_fixed_k_{name}.json")
+        d = r["delta"]
+        ax.axhline(d, color=MUTED, ls=(0, (4, 3)), lw=0.8)
+        ax.axhline(0, color=INK2, lw=0.5)
+        ax.text(1480, d * 1.25, "δ", color=MUTED, fontsize=7, ha="right")
+        for key, st in style.items():
+            ys = [r["arms"][f"{key}/k{k}"]["delta_vs_full"] for k in (200, 400)]
+            kw = dict(st)
+            kw.setdefault("lw", 1.2)
+            ax.plot([200, 400], [v[0] for v in ys], ms=4.5, mec="white", mew=0.5,
+                    zorder=3 if key == "track" else 2, **kw)
+            for k, v in zip((200, 400), ys):
+                ax.plot([k, k], [v[1], v[2]], color=st["color"], lw=0.8, zorder=1)
+        sp = r["arms"]["split/Ki"]["delta_vs_full"]
+        ki = r["split_Ki_mean"]
+        ax.plot([ki], [sp[0]], marker="s", ms=5, color=GREYS["split"], mec="white", mew=0.5, ls="none",
+                label="calibrated split at its own $K_i$ (one-shot)")
+        ax.annotate(f"mean $K_i$ = {ki:.0f}", xy=(ki, sp[0]), xytext=(ki, 0.35), ha="center", fontsize=7,
+                    color=INK2, arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.6))
+        ax.axvline(r["speech_positions_mean"], color=INK2, lw=0.6, ls=(0, (1, 2)))
+        ax.text(r["speech_positions_mean"] + 15, 2.2, "mean speech\npositions", fontsize=6.5, color=INK2, va="top")
+        ax.set_xscale("log")
+        ax.set_xlim(150, 1500)
+        ax.set_xticks([200, 400, 800, 1500])
+        ax.set_xticklabels(["200", "400", "800", "1500"])
+        ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+        symlog_axis(ax, 0.01)
+        ax.set_title(title, color=INK)
+        ax.set_xlabel("positions read per step and layer")
+    axs[0].set_ylabel("ΔWER vs full cache (symlog)")
+    h, l = axs[0].get_legend_handles_labels()
+    fig.legend(h, l, loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.1), fontsize=7)
+    fig.tight_layout(w_pad=1.0)
+    save(fig, "fig_t7_long")
+
+
 if __name__ == "__main__":
+    fig_long()
     fig_method()
     fig_padding()
     fig_budget()
