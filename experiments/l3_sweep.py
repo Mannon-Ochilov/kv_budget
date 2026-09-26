@@ -101,6 +101,26 @@ def main():
                 need[fam] = [(W_LAYER[m] + c[2] * c[4] / 32 * slot) / ALPHA, c[1], c[2], c[4]]
                 print(f"  minimal L3 {fam:<9} {need[fam][0]:5.1f} MiB  via {c[1]} (k={c[2]:.0f}, {c[4]}-bit, {c[3][0]:+.4f})")
         out[m] = {"delta": delta, "rows": rows, "min_l3": need}
+    # long audio (results_long_fixed_k_*): the one-shot set grows with the speech, the tracked set does
+    # not; minimal L3 for the passing configurations, FP32 (int8 was not measured on long audio)
+    print("\n== long audio, FP32 (minimal L3 of the passing configuration per family)")
+    out["long"] = {}
+    for name, m in (("small_en_long", "small_en"), ("medium_uz_long", "medium_uz")):
+        r = J(f"results_long_fixed_k_{name}.json")
+        slot = 2 * SETUPS[m].d_model * 4 / 1024 ** 2
+        fam = {"one-shot": [], "track": []}
+        for arm, v in r["arms"].items():
+            if arm == "full" or round(v["delta_vs_full"][2], 4) >= r["delta"]:
+                continue
+            k = r["split_Ki_mean"] if arm == "split/Ki" else float(arm.split("/k")[1])
+            fam["track" if arm.startswith("track") else "one-shot"].append((k, arm))
+        row = {}
+        for f, c in fam.items():
+            if c:
+                k, arm = min(c)
+                row[f] = [(W_LAYER[m] + k * slot) / ALPHA, arm, k]
+                print(f"  {name:<15} {f:<9} {row[f][0]:5.1f} MiB  via {arm} (k={k:.0f})")
+        out["long"][name] = row
     json.dump(out, open(os.path.join(HERE, "results_l3_sweep.json"), "w"), indent=1)
 
 
