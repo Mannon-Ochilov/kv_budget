@@ -30,6 +30,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--setup", default="medium_uz", choices=list(SETUPS))
     ap.add_argument("--n", type=int, default=300)
+    ap.add_argument("--schemes", default="int8_kivi,int4_kivi,int8_head")
     args = ap.parse_args()
     setup = SETUPS[args.setup]
     e6 = json.load(open(os.path.join(HERE, f"results_eviction_budget_{setup.name}.json")))
@@ -46,7 +47,7 @@ def main():
     tok, prompt = prompt_ids(setup)
     first, step = session(with_attention(setup.first)), session(setup.step)
 
-    for scheme in ("int8_kivi", "int4_kivi", "int8_head"):
+    for scheme in args.schemes.split(","):
         name = f"split/{scheme}"
         if name in res["arms"]:
             continue
