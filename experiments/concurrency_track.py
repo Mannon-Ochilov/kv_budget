@@ -33,7 +33,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ARMS = ("full", "oneshot_k", "track_ring")
-BW_SAT = 43.8e9
+BW_SAT = 43.0e9   # median of six 8-thread read measurements (41.6-44.2 GB/s)
 
 
 def worker(model, arm, seconds, barrier, q):

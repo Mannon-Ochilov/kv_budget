@@ -1,7 +1,8 @@
 """L9 -- roofline view of one decoder step.
 
 Machine ceilings, single thread (as every timing in the paper):
-  * DRAM read bandwidth: OpenBLAS sdot of a 1 GiB float32 vector with itself
+  * DRAM read bandwidth: max-reduction of a 1 GiB int32 array (read once;
+    same method as the multi-thread measurement). Earlier variants: OpenBLAS sdot of a 1 GiB float32 vector with itself
     (reads it once; far larger than the 24 MiB L3), median of 7. The first
     run used numpy's sum, which is compute-limited (9.8 GB/s, below the
     18-20 GB/s the decoder step itself sustains) -- replaced by sdot
@@ -55,13 +56,21 @@ T_STEP = 30
 HEADS = {"medium_uz": 16, "small_en": 12}
 
 
-def read_bw():
-    a = np.ones(2 ** 28, np.float32)                   # 1 GiB
-    np.dot(a, a)
+def read_bw(threads=1):
+    """Read bandwidth: max-reduction over a 1 GiB int32 array split into
+    `threads` chunks reduced concurrently (numpy releases the GIL). The same
+    method is used for 1-8 threads (43.8 GB/s at 8, the platform limit VTune
+    reports as 44 GB/s); OpenBLAS sdot, used first, does not scale with threads."""
+    from concurrent.futures import ThreadPoolExecutor
+    a = np.ones(2 ** 28, np.int32)
+    parts = np.array_split(a, threads)
+    ex = ThreadPoolExecutor(threads)
+    run = lambda: list(ex.map(lambda p: p.max(), parts))   # noqa: E731
+    run()
     ts = []
     for _ in range(7):
         t0 = time.perf_counter()
-        np.dot(a, a)
+        run()
         ts.append(time.perf_counter() - t0)
     return a.nbytes / np.median(ts) / 1e9
 
@@ -111,10 +120,11 @@ def graph_stats(path):
 
 
 def main():
-    bw, f32, i8 = read_bw(), fp32_peak(), int8_peak()
+    bws = [read_bw(1) for _ in range(5)]
+    bw, f32, i8 = float(np.median(bws)), fp32_peak(), int8_peak()
     print(f"machine (1 thread): DRAM read {bw:.1f} GB/s, FP32 {f32:.1f} GFLOP/s, INT8 {i8:.1f} GOP/s")
     lat = json.load(open(os.path.join(HERE, "results_track_latency.json")))["models"]
-    out = {"bw_GBs": bw, "fp32_GFLOPs": f32, "int8_GOPs": i8, "points": []}
+    out = {"bw_runs_GBs": bws, "bw_GBs": bw, "fp32_GFLOPs": f32, "int8_GOPs": i8, "points": []}
     for name in ("medium_uz", "small_en"):
         s = SETUPS[name]
         wbytes, macs = graph_stats(s.step)
