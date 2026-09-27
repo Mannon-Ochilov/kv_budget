@@ -51,13 +51,13 @@ def k_of(name, scale):
     return int(round(scale * r["test"][key]["kept"]))
 
 
-def make_arms(name):
+def make_arms(name, threads=1):
     setup = SETUPS[name]
     L, H = setup.n_layers, HEADS[name]
     rng = np.random.default_rng(0)
-    s_plain = session(setup.step)
-    s_bias = session(with_cross_bias(setup.step))
-    s_attn = session(with_attention(setup.step))   # track needs the alignment-head attention out
+    s_plain = session(setup.step, threads)
+    s_bias = session(with_cross_bias(setup.step), threads)
+    s_attn = session(with_attention(setup.step), threads)   # track needs the alignment-head attention out
     k_i, k = k_of(name, 1.0), k_of(name, 0.5)
     rn = 600
     n_sink = int(0.25 * k)
@@ -140,10 +140,11 @@ def make_arms(name):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--rounds", type=int, default=21)
+    ap.add_argument("--threads", type=int, default=1)
     args = ap.parse_args()
     out = {"rounds": args.rounds, "steps": STEPS, "models": {}}
     for name in ("medium_uz", "small_en"):
-        arms = make_arms(name)
+        arms = make_arms(name, args.threads)
         for fn in arms.values():
             for _ in range(3):
                 fn()
@@ -154,14 +155,16 @@ def main():
                 for _ in range(STEPS):
                     fn()
                 times[a].append((time.perf_counter() - t0) * 1e3 / STEPS)
-        print(f"\n{name}: decoder step at t = 30, {args.rounds} interleaved rounds x {STEPS} steps, 1 thread")
+        print(f"\n{name}: decoder step at t = 30, {args.rounds} interleaved rounds x {STEPS} steps, {args.threads} thread(s)")
         res = {}
         for a, v in times.items():
             v = np.array(v)
             res[a] = {"median_ms": float(np.median(v)), "min_ms": float(v.min()), "max_ms": float(v.max())}
             print(f"  {a:<22}{np.median(v):8.2f} ms   [{v.min():.2f}-{v.max():.2f}]")
         out["models"][name] = res
-    json.dump(out, open(os.path.join(HERE, "results_track_latency.json"), "w"), indent=1)
+    out["threads"] = args.threads
+    name = "results_track_latency.json" if args.threads == 1 else f"results_track_latency_t{args.threads}.json"
+    json.dump(out, open(os.path.join(HERE, name), "w"), indent=1)
 
 
 if __name__ == "__main__":
