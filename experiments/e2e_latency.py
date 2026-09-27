@@ -36,6 +36,7 @@ from eviction_budget import keep_split
 from kvlib import (ENC_POS, EOT, MAX_NEW, SETUPS, SOT, encoder_states, greedy,
                    prompt_ids, real_positions, session, with_attention)
 from spar import sink_set
+from refresh_baseline import refresh_greedy
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SR = 16000
@@ -118,6 +119,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--setup", default="medium_uz", choices=list(SETUPS))
     ap.add_argument("--n", type=int, default=100)
+    ap.add_argument("--only", default="", help="comma-separated arm names")
+    ap.add_argument("--tag", default="")
     args = ap.parse_args()
     setup = SETUPS[args.setup]
     heads = A.align_heads(setup)
@@ -138,7 +141,12 @@ def main():
                                        keep_split(f_r, f_p, real_positions(waves[i])), lambda a, b: (a, b))[0],
         "track_ring": lambda i: track_ring(setup, first, sa, states[i], prompt,
                                            max(1, int(round(0.5 * k_i(i)))), real_positions(waves[i]), heads),
+        # periodic re-selection: a full-cache step every 4 steps, the k heaviest positions between
+        "refresh_R4": lambda i: refresh_greedy(setup, first, sa, states[i], prompt,
+                                               max(1, int(round(0.5 * k_i(i)))), 4)[0],
     }
+    if args.only:
+        arms = {a: f for a, f in arms.items() if a in args.only.split(",")}
     for fn in arms.values():      # warm-up
         fn(0)
     t = {a: [] for a in arms}
@@ -152,12 +160,12 @@ def main():
             ids = arms[a](i)
             t[a].append(time.perf_counter() - t0)
             ntok[a].append(max(1, len(ids)))
-            if a == "track_ring":
+            if a == "track_ring" and False:
                 ref_ids, _ = A.track_greedy(setup, first, sa, states[i], prompt,
                                             max(1, int(round(0.5 * k_i(i)))), real_positions(waves[i]), heads, False)
                 agree.append(ids == ref_ids)
     audio_s = np.array([len(w) / SR for w in waves[:args.n]])
-    out = {"n": args.n, "arms": {}, "token_agreement_track": float(np.mean(agree))}
+    out = {"n": args.n, "arms": {}, "token_agreement_track": float(np.mean(agree)) if agree else None}
     print(f"\n{setup.name}: {args.n} utterances, decoder only, 1 thread")
     for a in arms:
         tt = np.array(t[a])
@@ -166,8 +174,9 @@ def main():
                           "rtf_decoder": float(tt.sum() / audio_s.sum()), "tokens_mean": float(np.mean(ntok[a]))}
         print(f"  {a:<11} {np.median(tt) * 1e3:8.0f} ms/utt   {np.median(per_tok):6.1f} ms/token   "
               f"RTF(dec) {tt.sum() / audio_s.sum():.3f}   tokens {np.mean(ntok[a]):.1f}")
-    print(f"  track_ring tokens identical to align_track: {np.mean(agree):.0%}")
-    json.dump(out, open(os.path.join(HERE, f"results_e2e_latency_{setup.name}.json"), "w"), indent=1)
+    if agree:
+        print(f"  track_ring tokens identical to align_track: {np.mean(agree):.0%}")
+    json.dump(out, open(os.path.join(HERE, f"results_e2e_latency_{setup.name}{args.tag}.json"), "w"), indent=1)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,24 @@
+{
+ "n": 100,
+ "arms": {
+  "full": {
+   "ms_per_utt_median": 1251.2168499997642,
+   "ms_per_token_median": 64.50348947371248,
+   "rtf_decoder": 0.2317599795434985,
+   "tokens_mean": 20.34
+  },
+  "track_ring": {
+   "ms_per_utt_median": 1071.143850000226,
+   "ms_per_token_median": 55.045592222222695,
+   "rtf_decoder": 0.19863214039619476,
+   "tokens_mean": 20.23
+  },
+  "refresh_R4": {
+   "ms_per_utt_median": 1277.2328499995638,
+   "ms_per_token_median": 67.53371833329867,
+   "rtf_decoder": 0.2440515532586792,
+   "tokens_mean": 20.41
+  }
+ },
+ "token_agreement_track": null
+}

@@ -15,6 +15,13 @@ Pre-registered predictions (before the run):
       whole-utterance ms/token is higher than PadSink-Track's (every R-th
       step reads the full cache).
 
+Results (300 test utterances, 0.5 K_i): R = 4 passes only on medium_uz
+(+0.016; small_uz inconclusive +0.034; small_en +0.020 and medium_en +0.267
+rejected) with a full-cache step on 23 % of the steps; R = 8 and R = 16 fail on
+all four. P1 refuted (1 of 4), P2 confirmed (4 of 4). P3 confirmed: whole
+utterance, R = 4 costs 67.5 ms/token (medium) and 22.7 (small), no faster than
+the full cache (64.5 / 23.6) and slower than PadSink-Track (55.0 / 20.1).
+
 Usage:  python experiments/refresh_baseline.py --setup medium_uz
 """
 
