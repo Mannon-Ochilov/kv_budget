@@ -104,7 +104,7 @@ def fig_method():
         ax.text(x + w / 2, yb + h / 2, txt, ha="center", va="center", color=INK, fontsize=7, linespacing=1.3)
     yb, h = 3.5, 11
     box(3, yb, 22, h, "working set of step $t$:\n"
-        r"$k = |W_t| + |S_\ell|$ positions" "\nin a ring buffer\n(0–3 slots rewritten)", ec=BLUE)
+        r"$k = |W_t| + |S_\ell|$ positions" "\nin a ring buffer\n(~5 % of slots rewritten per step)", ec=BLUE)
     box(30, yb, 16, h, "decoder step $t$\nreads only the\n$k$ positions")
     box(51, yb, 24, h, "alignment heads' attention\nover $W_t$ gives the peak;\n"
         r"$c_{t+1} = \max(c_t, \mathrm{peak})$")
@@ -459,9 +459,10 @@ def fig_method_full():
         ax.text(x0 + n * sw + sw * 0.47, y0 + 1.6, lab, fontsize=5.0, ha="center", va="center",
                 color=ORANGE if n < 2 else INK)
     ax.text(x0 + 11 * sw + 1.2, y0 + 1.6,
-            "ring buffer of one layer: the slots of positions 101, 102 that left the window are overwritten with the entering "
-            "109, 110 (0–3 slots per step,\nno per-step gather); s = sink slots. Attention ignores slot order, so the result equals "
-            "reading the positions in order.", fontsize=6, color=INK2, va="center")
+            "ring buffer of one layer: slots of positions that left the window (101, 102) are overwritten\n"
+            "with the entering ones (109, 110); in real decoding ~11 slots per step on average (~5 % of the\n"
+            "window), with no per-step gather. s = sink slots. Attention does not depend on slot order.",
+            fontsize=6, color=INK2, va="center")
     save(fig, "fig_t1_method")
 
 

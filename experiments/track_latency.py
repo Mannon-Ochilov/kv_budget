@@ -42,6 +42,9 @@ from step_latency_evicted import feed_for
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 STEPS = 20
+# window shift per step: 0..SHIFT_HI-1 positions. Real decoding (trace_track, medium_uz utt 22)
+# moves the window by 11 positions on average (median 9, max 54); the first runs used 0-3.
+SHIFT_HI = int(os.environ.get("TRACK_SHIFT_HI", "23"))
 HEADS = {"medium_uz": 16, "small_en": 12}
 
 
@@ -77,7 +80,7 @@ def make_arms(name, threads=1):
     f_full, f_ki, f_k = base, pruned(k_i), pruned(k)
 
     def gather(w, summary):
-        state["c"] = (state["c"] + int(rng.integers(0, 4))) % (rn - w)
+        state["c"] = (state["c"] + int(rng.integers(0, SHIFT_HI))) % (rn - w)
         lo = state["c"]
         idx = np.concatenate([np.arange(lo, lo + w), sinks])
         f = {"input_ids": base["input_ids"]}
@@ -114,7 +117,7 @@ def make_arms(name, threads=1):
     f_ring.update(rbuf)
 
     def ring_step():
-        d = int(rng.integers(0, 4))
+        d = int(rng.integers(0, SHIFT_HI))
         lo = ring["lo"]
         if lo + w_r + d > rn:
             d = 0
