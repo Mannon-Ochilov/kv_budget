@@ -1,0 +1,44 @@
+{
+ "medium_uz_full": {
+  "iters": 423,
+  "dram_read_B": 733538769.7021277,
+  "dram_write_B": 19856362.06146572,
+  "model_B": 707823567,
+  "ratio": 1.0363299611669015
+ },
+ "medium_uz_oneshot_k": {
+  "iters": 632,
+  "dram_read_B": 465834733.9746835,
+  "dram_write_B": 8349509.670886076,
+  "model_B": 451446735,
+  "ratio": 1.0318708672789128
+ },
+ "medium_uz_track_ring": {
+  "iters": 624,
+  "dram_read_B": 467792803.5897436,
+  "dram_write_B": 15023708.717948718,
+  "model_B": 451446735,
+  "ratio": 1.0362081887462176
+ },
+ "small_en_full": {
+  "iters": 1159,
+  "dram_read_B": 251246117.54961175,
+  "dram_write_B": 6104906.436583261,
+  "model_B": 252323055,
+  "ratio": 0.995731910227592
+ },
+ "small_en_oneshot_k": {
+  "iters": 1771,
+  "dram_read_B": 149298423.72444946,
+  "dram_write_B": 4074860.883116883,
+  "model_B": 154559727,
+  "ratio": 0.965959416610832
+ },
+ "small_en_track_ring": {
+  "iters": 1771,
+  "dram_read_B": 150615192.35686052,
+  "dram_write_B": 4377540.517221908,
+  "model_B": 154559727,
+  "ratio": 0.9744788974482371
+ }
+}

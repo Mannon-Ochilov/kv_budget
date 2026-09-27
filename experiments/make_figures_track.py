@@ -533,6 +533,53 @@ def fig_roofline():
 MiB_ = 2 ** 20
 
 
+# ------------------------------------------------------------------ figure 9 (system level)
+def fig_system():
+    dr = J("results_dram_vtune.json")
+    cc = J("results_concurrency_track_medium_uz.json")
+    fig, (a, b) = plt.subplots(1, 2, figsize=(FULL, 6.0 * CM), gridspec_kw={"width_ratios": [1, 1.1]})
+    arms = [("full", "full cache (1500)", MUTED), ("oneshot_k", "one-shot, $K_i/2$", GREYS["h2o_layer"]),
+            ("track_ring", "PadSink-Track, $K_i/2$", BLUE)]
+    for j, (m, title) in enumerate((("medium_uz", "Whisper-medium"), ("small_en", "Whisper-small"))):
+        for i, (arm, lab, col) in enumerate(arms):
+            r = dr[f"{m}_{arm}"]
+            x = j + (i - 1) * 0.27
+            a.bar(x, r["dram_read_B"] / MiB_, 0.24, color=col, zorder=2, label=lab if j == 0 else None)
+            a.plot([x - 0.12, x + 0.12], [r["model_B"] / MiB_] * 2, color=INK, lw=1.2, zorder=3,
+                   label="model: bytes the step must read" if (j == 0 and i == 0) else None)
+            a.text(x, r["dram_read_B"] / MiB_ + 12, f"{r['dram_read_B'] / MiB_:.0f}", ha="center", fontsize=6, color=INK2)
+    a.set_xticks([0, 1])
+    a.set_xticklabels(["Whisper-medium", "Whisper-small"])
+    a.set_ylabel("DRAM read per decoder step, MiB")
+    a.set_ylim(0, 820)
+    a.grid(axis="y", color=GRID, lw=0.5)
+    a.set_axisbelow(True)
+    a.legend(fontsize=6, loc="upper right")
+    a.set_title("(a) Memory-controller counters vs. model", color=INK, loc="left")
+    s = cc["summary"]
+    ns = [1, 2, 4, 8]
+    for arm, lab, col in arms:
+        y = [s[arm]["median"][str(n)] for n in ns]
+        b.plot(ns, y, marker="o", ms=4, color=col, lw=2.0 if arm == "track_ring" else 1.2, mec="white", mew=0.5,
+               label=lab, zorder=3)
+    for arm, col in (("full", MUTED), ("track_ring", BLUE)):
+        bd = s[arm]["bound"]
+        b.axhline(bd, color=col, ls=(0, (4, 3)), lw=0.8)
+        b.text(1.05, bd + 2, f"DRAM bound {bd:.0f} steps/s", fontsize=6.2, color=col)
+    b.set_xscale("log", base=2)
+    b.set_xticks(ns)
+    b.set_xticklabels([str(n) for n in ns])
+    b.set_xlabel("concurrent decoder streams (1 thread each)")
+    b.set_ylabel("aggregate decoder steps / s")
+    b.set_ylim(0, 110)
+    b.grid(color=GRID, lw=0.5)
+    b.set_axisbelow(True)
+    b.legend(fontsize=6, loc="lower right")
+    b.set_title("(b) Throughput of N streams sharing DRAM (medium)", color=INK, loc="left")
+    fig.tight_layout(w_pad=2.0)
+    save(fig, "fig_t9_system")
+
+
 # ------------------------------------------------------------------ figure 7
 def fig_long():
     sets = [("small_en_long", "(a) Whisper-small, English, ≥ 10 s (n = 80)"),
