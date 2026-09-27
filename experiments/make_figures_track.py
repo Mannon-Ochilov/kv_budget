@@ -465,6 +465,74 @@ def fig_method_full():
     save(fig, "fig_t1_method")
 
 
+# ------------------------------------------------------------------ figure 8 (roofline)
+def fig_roofline():
+    r = J("results_roofline.json")
+    bw, f32, i8 = r["bw_GBs"], r["fp32_GFLOPs"], r["int8_GOPs"]
+    fig, (a, b) = plt.subplots(1, 2, figsize=(FULL, 6.3 * CM), gridspec_kw={"width_ratios": [1.05, 1]})
+    ai = np.logspace(-0.3, 2.2, 200)
+    a.plot(ai, np.minimum(bw * ai, f32), color=INK, lw=1.2)
+    a.plot(ai, np.minimum(bw * ai, i8), color=MUTED, lw=0.9, ls=(0, (4, 3)))
+    a.text(40, f32 * 1.15, f"FP32 peak {f32:.0f} GFLOP/s", fontsize=6.5, color=INK, ha="center")
+    a.text(40, i8 * 1.15, f"INT8 peak {i8:.0f} GOP/s", fontsize=6.5, color=MUTED, ha="center")
+    a.text(0.62, bw * 0.62 * 1.9, f"DRAM {bw:.0f} GB/s\n(1 thread)", fontsize=6.5, color=INK, rotation=38, ha="left")
+    col = {"full": MUTED, "oneshot_Ki": GREYS["split"], "oneshot_k": GREYS["h2o_layer"], "track_ring": BLUE}
+    lab = {"full": "full cache (1500)", "oneshot_Ki": "one-shot, $K_i$", "oneshot_k": "one-shot, $K_i/2$",
+           "track_ring": "PadSink-Track, $K_i/2$ (ring)"}
+    mk = {"medium_uz": "o", "small_en": "s"}
+    seen = set()
+    for p in r["points"]:
+        key = p["arm"].split(" ")[0]
+        a.plot(p["ai"], p["gflops"], marker=mk[p["model"]], ms=5 if key == "track_ring" else 4.5, color=col[key],
+               mec="white", mew=0.5, ls="none", zorder=3,
+               label=lab[key] if key not in seen else None)
+        seen.add(key)
+    a.axvline(f32 / bw, color=MUTED, lw=0.6, ls=(0, (1, 2)))
+    a.text(f32 / bw * 1.08, 3.2, f"ridge {f32 / bw:.1f} FLOP/B", fontsize=6.3, color=INK2, rotation=90, va="bottom")
+    a.set_xscale("log")
+    a.set_yscale("log")
+    a.set_xlim(0.5, 160)
+    a.set_ylim(3, 900)
+    a.set_xlabel("arithmetic intensity, FLOP / byte")
+    a.set_ylabel("attained GFLOP/s (decoder step)")
+    a.grid(color=GRID, lw=0.5, which="major")
+    a.set_axisbelow(True)
+    a.set_title("(a) Roofline, 1 thread", color=INK, loc="left")
+    h, l = a.get_legend_handles_labels()
+    h += [plt.Line2D([], [], marker="o", color=INK2, ls="none", ms=4), plt.Line2D([], [], marker="s", color=INK2, ls="none", ms=4)]
+    l += ["Whisper-medium", "Whisper-small"]
+    a.legend(h, l, loc="lower right", fontsize=6, ncol=1)
+    # (b) time vs bytes
+    for name, marker in (("medium_uz", "o"), ("small_en", "s")):
+        pts = [p for p in r["points"] if p["model"] == name]
+        x = np.array([p["bytes"] / MiB_ for p in pts])
+        y = np.array([p["t_ms"] for p in pts])
+        for p in pts:
+            key = p["arm"].split(" ")[0]
+            b.plot(p["bytes"] / MiB_, p["t_ms"], marker=marker, ms=5, color=col[key], mec="white", mew=0.5, ls="none", zorder=3)
+        f = r[name]
+        xs = np.linspace(x.min() * 0.9, x.max() * 1.05, 10)
+        b.plot(xs, f["fit_offset_ms"] + xs * MiB_ / (f["fit_bw_GBs"] * 1e9) * 1e3, color=INK2, lw=0.9)
+        b.plot(xs, xs * MiB_ / (bw * 1e9) * 1e3, color=MUTED, lw=0.8, ls=(0, (4, 3)))
+        tx, ty = (110, 42) if name == "medium_uz" else (110, 38.5)
+        b.text(tx, ty, f"{'medium' if name == 'medium_uz' else 'small'}: t = {f['fit_offset_ms']:.1f} ms + bytes / "
+               f"{f['fit_bw_GBs']:.1f} GB/s ($R^2$ = {f['fit_r2']:.3f})", fontsize=6.2, color=INK2, ha="left")
+    b.text(110, 35, f"bytes / {bw:.0f} GB/s (read roof)", fontsize=6.2, color=MUTED,
+           ha="left")
+    b.set_xlabel("bytes read per decoder step, MiB")
+    b.set_ylabel("measured step time, ms")
+    b.grid(color=GRID, lw=0.5)
+    b.set_axisbelow(True)
+    b.set_xlim(100, 720)
+    b.set_ylim(0, 44)
+    b.set_title("(b) Step time is linear in the bytes read", color=INK, loc="left")
+    fig.tight_layout(w_pad=2.0)
+    save(fig, "fig_t8_roofline")
+
+
+MiB_ = 2 ** 20
+
+
 # ------------------------------------------------------------------ figure 7
 def fig_long():
     sets = [("small_en_long", "(a) Whisper-small, English, ≥ 10 s (n = 80)"),
