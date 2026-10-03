@@ -98,6 +98,14 @@ for _key, _dir in (("medium_en_ftk", "whisper_medium_en_ft_kenyan"),
         os.path.join(_onnx, "decoder_model_int8.onnx"),
         os.path.join(_onnx, "decoder_with_past_untied_int8.onnx"),
         SETUPS["medium_en"].audio, "en", 24, 1024, "en")
+# R6b (build_cv_en.py): the original medium and the Kenyan fine-tune on Common
+# Voice English, in the fine-tune's own domain
+_CV_EN = {"test": os.path.join(ROOT, "models", "_calib_cache", "cv_en_test300.npz"),
+          "validation": os.path.join(ROOT, "models", "_calib_cache", "cv_en_validation100.npz")}
+for _key, _base in (("medium_en_cv", SETUPS["medium_en"]), ("medium_en_ftk_cv", SETUPS_FT["medium_en_ftk"]),
+                    ("small_en_cv", SETUPS["small_en"])):
+    SETUPS_FT[_key] = Setup(_key, _base.hf_dir, _base.encoder, _base.first, _base.step,
+                            _CV_EN, "en", _base.n_layers, _base.d_model, "en")
 if os.environ.get("KV_FT") == "1":
     SETUPS.update(SETUPS_FT)
 

@@ -64,7 +64,7 @@ def _rho_from_valid(name):
     return min(w, key=w.get) if len(w) == 3 else None
 
 
-for _name in ("medium_en_ftk", "medium_en_ftm"):
+for _name in ("medium_en_ftk", "medium_en_ftm", "medium_en_cv", "medium_en_ftk_cv", "small_en_cv"):
     if _rho_from_valid(_name) is not None:
         RHO[_name] = _rho_from_valid(_name)
 
