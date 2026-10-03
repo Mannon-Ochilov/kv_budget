@@ -53,6 +53,22 @@ SCALES = (0.5, 0.25)
 RHO = {"medium_uz": 0.9, "small_uz": 0.95, "medium_en": 0.8, "small_en": 0.9}
 
 
+def _rho_from_valid(name):
+    """R6 fine-tunes: the rho with the lowest validation WER of PadSink-KV
+    (spar.py --phase valid), ties -> 0.9, as pre-registered."""
+    p = os.path.join(HERE, f"results_spar_{name}.json")
+    if not os.path.exists(p):
+        return None
+    v = json.load(open(p)).get("valid", {})
+    w = {r: v[f"spar/rho{r}"]["wer"] for r in (0.9, 0.8, 0.95) if f"spar/rho{r}" in v}
+    return min(w, key=w.get) if len(w) == 3 else None
+
+
+for _name in ("medium_en_ftk", "medium_en_ftm"):
+    if _rho_from_valid(_name) is not None:
+        RHO[_name] = _rho_from_valid(_name)
+
+
 def split_scaled(f_r, f_p, rn, s):
     n_r = max(1, int(round(s * max(1, int(round(f_r * rn))))))
     n_p = max(1, int(round(s * int(round(f_p * (ENC_POS - rn))))))

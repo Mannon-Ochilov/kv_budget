@@ -86,6 +86,21 @@ SETUPS = {
         "en", 24, 1024, "en"),
 }
 
+# R6 (prepare_medium_en_ft.py): two English fine-tunes of openai/whisper-medium,
+# same data as medium_en. Registered only with KV_FT=1, so the loops over the
+# four paper models (figures, L3 sweep) are unchanged.
+SETUPS_FT = {}
+for _key, _dir in (("medium_en_ftk", "whisper_medium_en_ft_kenyan"),
+                   ("medium_en_ftm", "whisper_medium_en_ft_medical")):
+    _hf, _onnx = (os.path.join(ROOT, "models", _dir + s) for s in ("_hf", "_onnx"))
+    SETUPS_FT[_key] = Setup(
+        _key, _hf, os.path.join(_onnx, "encoder_model.onnx"),
+        os.path.join(_onnx, "decoder_model_int8.onnx"),
+        os.path.join(_onnx, "decoder_with_past_untied_int8.onnx"),
+        SETUPS["medium_en"].audio, "en", 24, 1024, "en")
+if os.environ.get("KV_FT") == "1":
+    SETUPS.update(SETUPS_FT)
+
 
 # ------------------------------------------------------------------ helpers
 def session(path, threads=1):

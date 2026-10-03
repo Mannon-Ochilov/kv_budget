@@ -202,6 +202,7 @@ def main():
     ap.add_argument("--setup", default="small_en", choices=list(SETUPS))
     ap.add_argument("--n", type=int, default=300)
     ap.add_argument("--valid", action="store_true", help="tune BACK / peak on the validation split")
+    ap.add_argument("--only", nargs="*", help="run only these arms, e.g. track/s0.5")
     args = ap.parse_args()
     if args.valid:
         return tune(args)
@@ -226,6 +227,8 @@ def main():
     for s in SCALES:
         for heavy in (False, "sum"):
             name = f"track{'_sum' if heavy else ''}/s{s}"
+            if args.only and name not in args.only:
+                continue
             if name in res["arms"] and res["arms"][name]["n"] == args.n:
                 continue
             wers, kept, t0 = [], [], time.time()
