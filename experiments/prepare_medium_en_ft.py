@@ -39,7 +39,31 @@ Pre-registered predictions (written before any of these models was run):
       as supported only if the upper CI bound is below that as well, or the
       result is reported as a pass at the model's own margin only.
 
-Usage:  python experiments/prepare_medium_en_ft.py --model ftk|ftm
+R6c (2026-10-04). The two fine-tunes above were dropped: the Kenyan one breaks
+on standard English (LibriSpeech test WER 0.163, empty and looping outputs),
+and the medical one is a 600-step fine-tune. Replaced by
+
+  medium_en_ftc  deepdml/whisper-medium-en-cv17 (Apache-2.0): Common Voice 17
+                 English, 5000 steps x 32; reported WER CV17 10.7, FLEURS 7.5,
+                 VoxPopuli 9.1 -- a substantial fine-tune that keeps general
+                 English
+
+run on both English sets, Common Voice (medium_en_ftc_cv, in-domain, speaker-
+disjoint from its training split) and LibriSpeech (medium_en_ftc), with the
+original medium as the reference on each (medium_en_cv, medium_en).
+
+Pre-registered predictions (before any run of this checkpoint):
+  F7  on both sets, PadSink-Track at 0.5 K_i passes for medium_en_ftc where the
+      original medium fails (Common Voice +0.414, LibriSpeech +0.022);
+  F8  the upper CI bound of its dWER is below the original medium's absolute
+      delta on the same set (0.0305 Common Voice, 0.0073 LibriSpeech), so a
+      pass cannot come from a wider margin alone (F3);
+  F9  its pad_out is below the original medium's on the same utterances
+      (52.5 % Common Voice, 34.8 % LibriSpeech).
+  Refutation: a fail on both sets means fine-tuning does not explain why the
+  Uzbek medium works; the paper then reports the checkpoint dependence only.
+
+Usage:  python experiments/prepare_medium_en_ft.py --model ftk|ftm|ftc
 """
 
 import argparse
@@ -55,6 +79,7 @@ PY = sys.executable
 MODELS = {
     "ftk": ("Veronica1NW/en_whisper_nonstandard_medium", "whisper_medium_en_ft_kenyan"),
     "ftm": ("santhosh643/whisper-medium-english", "whisper_medium_en_ft_medical"),
+    "ftc": ("deepdml/whisper-medium-en-cv17", "whisper_medium_en_ft_cv17"),
 }
 BASE_HF = os.path.join(ROOT, "models", "whisper_medium_en_hf")
 

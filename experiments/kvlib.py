@@ -91,7 +91,8 @@ SETUPS = {
 # four paper models (figures, L3 sweep) are unchanged.
 SETUPS_FT = {}
 for _key, _dir in (("medium_en_ftk", "whisper_medium_en_ft_kenyan"),
-                   ("medium_en_ftm", "whisper_medium_en_ft_medical")):
+                   ("medium_en_ftm", "whisper_medium_en_ft_medical"),
+                   ("medium_en_ftc", "whisper_medium_en_ft_cv17")):
     _hf, _onnx = (os.path.join(ROOT, "models", _dir + s) for s in ("_hf", "_onnx"))
     SETUPS_FT[_key] = Setup(
         _key, _hf, os.path.join(_onnx, "encoder_model.onnx"),
@@ -103,7 +104,7 @@ for _key, _dir in (("medium_en_ftk", "whisper_medium_en_ft_kenyan"),
 _CV_EN = {"test": os.path.join(ROOT, "models", "_calib_cache", "cv_en_test300.npz"),
           "validation": os.path.join(ROOT, "models", "_calib_cache", "cv_en_validation100.npz")}
 for _key, _base in (("medium_en_cv", SETUPS["medium_en"]), ("medium_en_ftk_cv", SETUPS_FT["medium_en_ftk"]),
-                    ("small_en_cv", SETUPS["small_en"])):
+                    ("small_en_cv", SETUPS["small_en"]), ("medium_en_ftc_cv", SETUPS_FT["medium_en_ftc"])):
     SETUPS_FT[_key] = Setup(_key, _base.hf_dir, _base.encoder, _base.first, _base.step,
                             _CV_EN, "en", _base.n_layers, _base.d_model, "en")
 if os.environ.get("KV_FT") == "1":
