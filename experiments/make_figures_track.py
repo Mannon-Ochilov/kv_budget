@@ -2,7 +2,7 @@
 
 Arial 8 pt, full width 17 cm (single column 8.5 cm), 600 dpi PNG + PDF,
 panel labels (a), (b), ... Colours by role: PadSink-Track blue, the earlier
-one-shot PadSink-KV orange, the other one-shot rules in greys with distinct
+sink + one-shot audio control orange, the other one-shot rules in greys with distinct
 markers, the oracle black dashed, the gate delta grey dashed.
 
   fig_t1_method.png       method schematic
@@ -203,7 +203,7 @@ def fig_budget():
         "h2o_layer": dict(color=GREYS["h2o_layer"], marker="v", label="H2O per layer (one-shot)"),
         "pyramidkv": dict(color=GREYS["pyramidkv"], marker="^", label="PyramidKV (one-shot)"),
         "snapkv": dict(color="#55544f", marker="D", ls=(0, (1, 1)), label="SnapKV (one-shot; $K_i$, $K_i/2$)"),
-        "padsink": dict(color=ORANGE, marker="o", label="PadSink-KV (one-shot)"),
+        "padsink": dict(color=ORANGE, marker="o", label="sink + one-shot audio"),
         "track": dict(color=BLUE, marker="o", label="PadSink-Track", lw=2.0),
         "oracle": dict(color=INK, marker="x", ls="--", label="per-step oracle (not realizable)", lw=1.0),
     }
@@ -397,7 +397,7 @@ def fig_method_full():
         return cw, rh, cx, cy, y_top, y_bot
 
     # (a) one-shot
-    cw, rh, cx, cy, yt, yb = grid(3, ("(a) One-shot retention", "H2O, SnapKV, PyramidKV, PadSink-KV"))
+    cw, rh, cx, cy, yt, yb = grid(3, ("(a) One-shot retention", "the set is chosen once, at t = 1"))
     kept = np.unique(np.concatenate([[0, 1, 2, 3, 5, 6], sinks]))
     for p_ in kept:
         ax.add_patch(Rectangle((cx(p_) - cw * 0.42, yb), cw * 0.84, yt - yb, fc=GREYS["h2o_layer"], alpha=0.8, ec="none"))
@@ -588,7 +588,7 @@ def fig_long():
             ("medium_uz_long", "(b) Whisper-medium, Uzbek, 15–30 s composites (n = 89)")]
     fig, axs = plt.subplots(1, 2, figsize=(FULL, 6.2 * CM), sharey=True)
     style = {"h2o_layer": dict(color=GREYS["h2o_layer"], marker="v", label="H2O per layer (one-shot)"),
-             "padsink": dict(color=ORANGE, marker="o", label="PadSink-KV (one-shot)"),
+             "padsink": dict(color=ORANGE, marker="o", label="sink + one-shot audio"),
              "track": dict(color=BLUE, marker="o", label="PadSink-Track", lw=2.0)}
     for ax, (name, title) in zip(axs, sets):
         r = J(f"results_long_fixed_k_{name}.json")
