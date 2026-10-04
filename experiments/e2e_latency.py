@@ -20,6 +20,15 @@ order differs) -- the token agreement is reported as a check.
 Prediction (before the run): per token, track_ring is within 10% of
 oneshot_Ki and at least 25% below full on medium_uz.
 
+track_fb (added with adaptive_track.py): track_ring plus the full-cache
+fallback -- a step whose top-1 probability is below tau = 0.9 is run again on
+the full cross cache (still in DRAM); the redone step costs a Track step plus
+a full step. Run with --only full,track_ring,track_fb --tag _fb.
+Prediction (before the run): per token, track_fb is below full on all four
+models, saving 3-14 % (less than track_ring's 12-16 %), smallest on medium_en
+and small_en where ~18 % of the steps are redone. A saving <= 0 on a model
+means the fallback buys quality there at no speed gain.
+
 Usage:  python experiments/e2e_latency.py --setup medium_uz --n 100
 """
 
@@ -42,7 +51,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SR = 16000
 
 
-def track_ring(setup, first, sa, enc, prompt, k, rn, heads):
+def track_ring(setup, first, sa, enc, prompt, k, rn, heads, tau=None, stats=None):
     ids = [SOT, *prompt]
     out = first.run(None, {"input_ids": np.array([ids], dtype=np.int64),
                            "encoder_hidden_states": np.ascontiguousarray(enc[None])})
@@ -103,12 +112,29 @@ def track_ring(setup, first, sa, enc, prompt, k, rn, heads):
                 feed[n] = buf[pn] if ".encoder." in pn else present[pn]
         res = sa.run(None, feed)
         logits = res[s_out.index("logits")]
+        redo = False
+        if tau is not None:
+            z = logits[0, -1].astype(np.float64)
+            z -= z.max()
+            redo = 1.0 / np.exp(z).sum() < tau
+            if stats is not None:
+                stats[0] += 1
+                stats[1] += int(redo)
+        if redo:      # the same step on the full cross cache
+            for n in s_in:
+                if n.startswith("past_key_values") and ".encoder." in n:
+                    feed[n] = full_cross["present" + n[len("past_key_values"):]]
+            res = sa.run(None, feed)
+            logits = res[s_out.index("logits")]
         for n, v in zip(s_out, res):
             if n.startswith("present") and ".decoder." in n:
                 present[n] = v
         score = np.zeros(ENC_POS)
         for l, h in heads:
-            np.add.at(score, slot_pos[l], res[att_idx[l]][0, h, -1, :])
+            if redo:
+                score += res[att_idx[l]][0, h, -1, :]
+            else:
+                np.add.at(score, slot_pos[l], res[att_idx[l]][0, h, -1, :])
         score[rn:] = 0
         c = max(c, int(np.argmax(score)))
         nxt = int(np.argmax(logits[0, -1]))
@@ -135,12 +161,15 @@ def main():
     def k_i(i):
         return len(keep_split(f_r, f_p, real_positions(waves[i]))(np.zeros(ENC_POS)))
 
+    fb_stats = [0, 0]
     arms = {
         "full": lambda i: greedy(setup, first, step, states[i], prompt, lambda m: None, lambda a, b: (a, b))[0],
         "oneshot_Ki": lambda i: greedy(setup, first, step, states[i], prompt,
                                        keep_split(f_r, f_p, real_positions(waves[i])), lambda a, b: (a, b))[0],
         "track_ring": lambda i: track_ring(setup, first, sa, states[i], prompt,
                                            max(1, int(round(0.5 * k_i(i)))), real_positions(waves[i]), heads),
+        "track_fb": lambda i: track_ring(setup, first, sa, states[i], prompt, max(1, int(round(0.5 * k_i(i)))),
+                                         real_positions(waves[i]), heads, tau=0.9, stats=fb_stats),
         # periodic re-selection: a full-cache step every 4 steps, the k heaviest positions between
         "refresh_R4": lambda i: refresh_greedy(setup, first, sa, states[i], prompt,
                                                max(1, int(round(0.5 * k_i(i)))), 4)[0],
@@ -174,6 +203,9 @@ def main():
                           "rtf_decoder": float(tt.sum() / audio_s.sum()), "tokens_mean": float(np.mean(ntok[a]))}
         print(f"  {a:<11} {np.median(tt) * 1e3:8.0f} ms/utt   {np.median(per_tok):6.1f} ms/token   "
               f"RTF(dec) {tt.sum() / audio_s.sum():.3f}   tokens {np.mean(ntok[a]):.1f}")
+    if fb_stats[0]:
+        out["fb_redone_share"] = fb_stats[1] / fb_stats[0]
+        print(f"  track_fb: {out['fb_redone_share']:.0%} of the steps redone on the full cache")
     if agree:
         print(f"  track_ring tokens identical to align_track: {np.mean(agree):.0%}")
     json.dump(out, open(os.path.join(HERE, f"results_e2e_latency_{setup.name}{args.tag}.json"), "w"), indent=1)
