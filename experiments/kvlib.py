@@ -107,6 +107,17 @@ for _key, _base in (("medium_en_cv", SETUPS["medium_en"]), ("medium_en_ftk_cv", 
                     ("small_en_cv", SETUPS["small_en"]), ("medium_en_ftc_cv", SETUPS_FT["medium_en_ftc"])):
     SETUPS_FT[_key] = Setup(_key, _base.hf_dir, _base.encoder, _base.first, _base.step,
                             _CV_EN, "en", _base.n_layers, _base.d_model, "en")
+# R9 (build_cv_en.py): original checkpoints in other languages
+for _lang in ("ru", "tr"):
+    _cv = {sp: os.path.join(ROOT, "models", "_calib_cache", f"cv_{_lang}_{sp}{n}.npz")
+           for sp, n in (("test", 300), ("validation", 100))}
+    for _size in ("medium", "small"):
+        _base = SETUPS[f"{_size}_en"]
+        SETUPS_FT[f"{_size}_{_lang}_cv"] = Setup(f"{_size}_{_lang}_cv", _base.hf_dir, _base.encoder, _base.first,
+                                                 _base.step, _cv, _lang, _base.n_layers, _base.d_model, "en")
+_base = SETUPS["medium_en"]
+SETUPS_FT["medium_uzorig"] = Setup("medium_uzorig", _base.hf_dir, _base.encoder, _base.first, _base.step,
+                                   SETUPS["medium_uz"].audio, "uz", 24, 1024, "uz")
 if os.environ.get("KV_FT") == "1":
     SETUPS.update(SETUPS_FT)
 

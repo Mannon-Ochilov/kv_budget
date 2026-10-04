@@ -25,7 +25,24 @@ Pre-registered predictions (written before any run on these sets):
       the same utterances, and passes; F3 (absolute delta of the original
       medium on the same set) applies.
 
-Usage:  python experiments/build_cv_en.py
+R9 (2026-10-04) -- other languages. openai/whisper-medium is one multilingual
+checkpoint, so the question "is the failure specific to English?" needs only
+audio: the same builder with --lang ru / tr gives cv_{lang}_test300.npz and
+cv_{lang}_validation100.npz. Setups (KV_FT=1): medium_ru_cv, medium_tr_cv,
+small_ru_cv, small_tr_cv (original checkpoints, own split calibration and rho,
+frozen Track settings) and medium_uzorig = the original medium on the Uzbek
+Common Voice sets of medium_uz (same language and utterances as the Uzbek
+fine-tune; its WER is high, so it is read through pad_out, not the gate).
+
+Pre-registered predictions (before any run in these languages):
+  L1  the original medium fails at 0.5 K_i in Russian and in Turkish, with
+      pad_out >= 30 % -- the failure belongs to the checkpoint, not to English;
+  L2  the original small passes in both;
+  L3  on the Uzbek utterances the original medium's pad_out is >= 30 %,
+      against 17.3 % for the Uzbek fine-tune.
+  If L1 fails (medium passes in ru / tr), the failure is specific to English.
+
+Usage:  python experiments/build_cv_en.py [--lang en|ru|tr]
 """
 
 import io
@@ -52,11 +69,11 @@ def to16k(b):
     return wav[:30 * 16000]
 
 
-def build(split, n, fname):
+def build(split, n, fname, lang="en"):
     out = os.path.join(CACHE, fname)
     if os.path.exists(out):
         return
-    ds = load_dataset("fixie-ai/common_voice_17_0", "en", split=split,
+    ds = load_dataset("fixie-ai/common_voice_17_0", lang, split=split,
                       streaming=True).cast_column("audio", Audio(decode=False))
     waves, texts, spk, count = [], [], [], Counter()
     for r in ds:
@@ -78,5 +95,7 @@ def build(split, n, fname):
 
 
 if __name__ == "__main__":
-    build("test", 300, "cv_en_test300.npz")
-    build("validation", 100, "cv_en_validation100.npz")
+    import sys
+    lang = sys.argv[sys.argv.index("--lang") + 1] if "--lang" in sys.argv else "en"
+    build("test", 300, f"cv_{lang}_test300.npz", lang)
+    build("validation", 100, f"cv_{lang}_validation100.npz", lang)
