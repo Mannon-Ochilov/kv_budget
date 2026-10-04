@@ -14,12 +14,13 @@ calibrated quantity, like K_i and rho:
                (i) upper 95 % bound of dWER < delta and
                (ii) no utterance with WER > 1 that the full cache does not
                have. No such arm -> the model keeps the full cache.
-  evaluation   the chosen arm, once: the four paper models on the independent
-               500-utterance sets (speaker bootstrap; these sets were used once
-               before, for tau = 0.9), the other-language setups (original
-               medium and small, Common Voice ru / tr) on their 300 test
-               utterances. K_i (split rule), rho and the Track settings are the
-               frozen ones.
+  evaluation   the chosen arm on the usual 300 test utterances of every setup
+               (the four paper models and the other-language setups: original
+               medium and small, Common Voice ru / tr). For the paper models
+               these test sets were already used for the tau sensitivity runs
+               (adaptive_track.py), so the evaluation there is not blind; the
+               calibration itself uses validation data only. K_i (split rule),
+               rho and the Track settings are the frozen ones.
 
 Pre-registered predictions (before any calibration run):
   K1  chosen arm: none or 0.6 for small_en and small_uz; 0.6-0.8 for
@@ -146,16 +147,8 @@ def main():
     if arm is None:
         print(f"  {base.name}: full cache (no arm chosen) -- nothing to evaluate", flush=True)
         return
-    if base.name in PAPER:
-        npz = os.path.join(CACHE, "cv_uz_indep500.npz" if base.language == "uz" else "ls_test_clean_indep500.npz")
-        ev = derived(base, "_indep", "test", npz)
-        states, waves, texts = kvlib.encoder_states(ev, "test", 500)
-        spk = np.load(npz, allow_pickle=True)["speakers"].tolist()[:500]
-        full = json.load(open(os.path.join(HERE, f"results_indep_{base.name}.json")))["arms"]["full"]["per_sample_wer"]
-        name = "independent 500"
-    else:
-        states, waves, texts = kvlib.encoder_states(base, "test", 300)
-        spk, full, name = None, e6["test"]["full"]["per_sample_wer"], "test 300"
+    states, waves, texts = kvlib.encoder_states(base, "test", 300)
+    spk, full, name = None, e6["test"]["full"]["per_sample_wer"], "test 300"
     r = run(base, states, waves, texts, arm, ctx)
     wf = float(np.mean(full))
     d = (speaker_ci(r["per_sample_wer"], full, spk, np.random.default_rng(SEED)) if spk
