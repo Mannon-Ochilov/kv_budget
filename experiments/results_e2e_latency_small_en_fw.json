@@ -1,0 +1,19 @@
+{
+ "n": 100,
+ "tau": "none",
+ "arms": {
+  "full": {
+   "ms_per_utt_median": 422.78820000137785,
+   "ms_per_token_median": 21.447190131584648,
+   "rtf_decoder": 0.07021996333128297,
+   "tokens_mean": 23.18
+  },
+  "track_ring": {
+   "ms_per_utt_median": 351.5690500025812,
+   "ms_per_token_median": 18.50363421066217,
+   "rtf_decoder": 0.06057184749322119,
+   "tokens_mean": 23.14
+  }
+ },
+ "token_agreement_track": null
+}

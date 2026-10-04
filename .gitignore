@@ -7,3 +7,6 @@ README.md
 MAQOLA_REJA.md
 build_kv_paper_uz.py
 onnxruntime_profile__*.json
+experiments/_log_*.txt
+experiments/*_log*.txt
+experiments/*_done.txt

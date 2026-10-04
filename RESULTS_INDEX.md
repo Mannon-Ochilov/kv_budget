@@ -49,3 +49,25 @@ All WER results: 300 test utterances unless noted; paired bootstrap, seed 202609
 | medium_en checkpoint = original openai/whisper-medium (SHA-256) | `prepare_whisper_medium_en.py` (docstring) |
 
 Figures are written to `figures/fig_t*.png|pdf`.
+
+## Framework (calibrated fallback) and additional checkpoints / languages
+
+Setups beyond the four paper models are registered in `kvlib.py` with `KV_FT=1`.
+
+| Result | Script | Result file(s) |
+|---|---|---|
+| Framework: per-model tau calibration (300 validation utterances) and evaluation (300 test), 10 setups | `build_calib.py`, `framework.py` (`run_framework.sh`) | `results_framework_{setup}.json` |
+| Fallback, fixed tau, tau sensitivity (0.5-0.95) on test; adaptive (uncapped) sink | `adaptive_track.py` | `results_adaptive_fb_{model}.json`, `results_adaptive_adapt_{model}.json` |
+| tau = 0.9 on the independent 500-utterance sets | `indep_fb.py` | `results_indep_fb_{model}.json` |
+| Whole-utterance timing: no fallback, tau = 0.5 / 0.7 / 0.9, calibrated tau | `e2e_latency.py` (`track_fb*`, `--tau auto`) | `results_e2e_latency_{model}_fb.json`, `_fb_tau.json`, `_fw.json` |
+| Long audio with the fallback | `long_fb.py` | `results_long_fb_{set}.json` |
+| Original medium / small on Common Voice English, Russian, Turkish: split calibration, rho, plain PadSink-Track, coverage | `build_cv_en.py`, `run_lang.sh` (`eviction_budget.py`, `spar.py`, `align_track.py`, `track_coverage.py`) | `results_eviction_budget_*_cv.json`, `results_spar_*_cv.json`, `results_align_track_*_cv.json`, `results_track_coverage_*_cv.json` |
+| English fine-tune of whisper-medium (Common Voice 17), both English sets | `prepare_medium_en_ft.py --model ftc`, `run_par.sh` | `results_*_medium_en_ftc.json`, `results_*_medium_en_ftc_cv.json` |
+| Sink drift diagnostic | `sink_drift.py` | `results_sink_drift_{model}.json` |
+| Refresh baseline (R = 4 / 8 / 16), independent sets, medium_en validation diagnostic | `refresh_baseline.py`, `indep_eval.py`, `medium_en_diag.py` | `results_refresh_*.json`, `results_indep_*.json`, `results_medium_en_diag.json` |
+| Figure: tau vs quality / redone steps / saving | `make_figure_tau.py` | `figures/fig_t10_tau.*` |
+| Figure: framework schematic | `make_figure_framework.py` | `figures/fig_t11_framework.*` |
+
+Pre-registered predictions and their outcomes are in the docstrings of `prepare_medium_en_ft.py` (F1-F9),
+`build_cv_en.py` (F4-F6, L1-L3), `adaptive_track.py` (A1-A2), `indep_fb.py` (C1-C2), `framework.py` (K1-K3)
+and `long_fb.py`.

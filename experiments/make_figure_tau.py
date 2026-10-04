@@ -34,8 +34,9 @@ def quality(m):
 
 def saving(m):
     a, b = J(f"results_e2e_latency_{m}_fb.json")["arms"], J(f"results_e2e_latency_{m}_fb_tau.json")["arms"]
+    c = J(f"results_e2e_latency_{m}_fw.json")["arms"]          # the final session: full / no fallback / chosen tau
     s = lambda arms, k: 100 * (1 - arms[k]["ms_per_token_median"] / arms["full"]["ms_per_token_median"])   # noqa: E731
-    return [0, 1, 3, 5], [s(a, "track_ring"), s(b, "track_fb05"), s(b, "track_fb07"), s(a, "track_fb")]
+    return [0, 1, 3, 5], [s(c, "track_ring"), s(b, "track_fb05"), s(b, "track_fb07"), s(a, "track_fb")]
 
 
 def main():
