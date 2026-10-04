@@ -68,6 +68,6 @@ Setups beyond the four paper models are registered in `kvlib.py` with `KV_FT=1`.
 | Figure: tau vs quality / redone steps / saving | `make_figure_tau.py` | `figures/fig_t10_tau.*` |
 | Figure: framework schematic | `make_figure_framework.py` | `figures/fig_t11_framework.*` |
 
-Pre-registered predictions and their outcomes are in the docstrings of `prepare_medium_en_ft.py` (F1-F9),
+Pre-registered predictions are in the docstrings of `prepare_medium_en_ft.py` (F1-F9),
 `build_cv_en.py` (F4-F6, L1-L3), `adaptive_track.py` (A1-A2), `indep_fb.py` (C1-C2), `framework.py` (K1-K3)
 and `long_fb.py`.
