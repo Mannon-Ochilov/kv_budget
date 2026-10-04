@@ -162,6 +162,7 @@ def main():
         return len(keep_split(f_r, f_p, real_positions(waves[i]))(np.zeros(ENC_POS)))
 
     fb_stats = [0, 0]
+    fb_more = {"track_fb05": [0, 0], "track_fb07": [0, 0]}
     arms = {
         "full": lambda i: greedy(setup, first, step, states[i], prompt, lambda m: None, lambda a, b: (a, b))[0],
         "oneshot_Ki": lambda i: greedy(setup, first, step, states[i], prompt,
@@ -170,6 +171,11 @@ def main():
                                            max(1, int(round(0.5 * k_i(i)))), real_positions(waves[i]), heads),
         "track_fb": lambda i: track_ring(setup, first, sa, states[i], prompt, max(1, int(round(0.5 * k_i(i)))),
                                          real_positions(waves[i]), heads, tau=0.9, stats=fb_stats),
+        # the same at tau = 0.5 / 0.7, for the tau-vs-saving curve (--tag _fb_tau)
+        "track_fb05": lambda i: track_ring(setup, first, sa, states[i], prompt, max(1, int(round(0.5 * k_i(i)))),
+                                           real_positions(waves[i]), heads, tau=0.5, stats=fb_more["track_fb05"]),
+        "track_fb07": lambda i: track_ring(setup, first, sa, states[i], prompt, max(1, int(round(0.5 * k_i(i)))),
+                                           real_positions(waves[i]), heads, tau=0.7, stats=fb_more["track_fb07"]),
         # periodic re-selection: a full-cache step every 4 steps, the k heaviest positions between
         "refresh_R4": lambda i: refresh_greedy(setup, first, sa, states[i], prompt,
                                                max(1, int(round(0.5 * k_i(i)))), 4)[0],
@@ -206,6 +212,10 @@ def main():
     if fb_stats[0]:
         out["fb_redone_share"] = fb_stats[1] / fb_stats[0]
         print(f"  track_fb: {out['fb_redone_share']:.0%} of the steps redone on the full cache")
+    for a, st in fb_more.items():
+        if st[0]:
+            out["arms"][a]["redone_share"] = st[1] / st[0]
+            print(f"  {a}: {st[1] / st[0]:.0%} of the steps redone on the full cache")
     if agree:
         print(f"  track_ring tokens identical to align_track: {np.mean(agree):.0%}")
     json.dump(out, open(os.path.join(HERE, f"results_e2e_latency_{setup.name}{args.tag}.json"), "w"), indent=1)
