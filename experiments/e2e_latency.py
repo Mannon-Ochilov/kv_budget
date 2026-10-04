@@ -147,6 +147,7 @@ def main():
     ap.add_argument("--n", type=int, default=100)
     ap.add_argument("--only", default="", help="comma-separated arm names")
     ap.add_argument("--tag", default="")
+    ap.add_argument("--tau", default="", help="extra arm track_tau; 'auto' = the arm framework.py chose for this model")
     args = ap.parse_args()
     setup = SETUPS[args.setup]
     heads = A.align_heads(setup)
@@ -180,6 +181,13 @@ def main():
         "refresh_R4": lambda i: refresh_greedy(setup, first, sa, states[i], prompt,
                                                max(1, int(round(0.5 * k_i(i)))), 4)[0],
     }
+    tau = args.tau
+    if tau == "auto":
+        tau = json.load(open(os.path.join(HERE, f"results_framework_{setup.name}.json")))["choice"]
+    if tau and tau != "none":
+        fb_more["track_tau"] = [0, 0]
+        arms["track_tau"] = lambda i: track_ring(setup, first, sa, states[i], prompt, max(1, int(round(0.5 * k_i(i)))),
+                                                 real_positions(waves[i]), heads, tau=float(tau), stats=fb_more["track_tau"])
     if args.only:
         arms = {a: f for a, f in arms.items() if a in args.only.split(",")}
     for fn in arms.values():      # warm-up
@@ -200,7 +208,7 @@ def main():
                                             max(1, int(round(0.5 * k_i(i)))), real_positions(waves[i]), heads, False)
                 agree.append(ids == ref_ids)
     audio_s = np.array([len(w) / SR for w in waves[:args.n]])
-    out = {"n": args.n, "arms": {}, "token_agreement_track": float(np.mean(agree)) if agree else None}
+    out = {"n": args.n, "tau": tau, "arms": {}, "token_agreement_track": float(np.mean(agree)) if agree else None}
     print(f"\n{setup.name}: {args.n} utterances, decoder only, 1 thread")
     for a in arms:
         tt = np.array(t[a])
