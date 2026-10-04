@@ -183,7 +183,10 @@ def encoder_states(setup, split, n, threads=8):
         return np.load(path, mmap_mode="r"), waves, texts
     fe = WhisperFeatureExtractor.from_pretrained(setup.hf_dir)
     enc = session(setup.encoder, threads)
-    st = np.lib.format.open_memmap(path, mode="w+", dtype=np.float32,
+    # written under a temporary name and renamed when complete: a run killed
+    # midway must not leave a half-filled file that later runs take for a cache
+    tmp = f"{path}.{os.getpid()}.part"
+    st = np.lib.format.open_memmap(tmp, mode="w+", dtype=np.float32,
                                    shape=(n, ENC_POS, setup.d_model))
     for i, wav in enumerate(waves):
         f = fe(wav, sampling_rate=16000,
@@ -192,7 +195,8 @@ def encoder_states(setup, split, n, threads=8):
         if (i + 1) % 50 == 0:
             print(f"  encoder {i + 1}/{n}", flush=True)
     st.flush()
-    del enc
+    del enc, st
+    os.replace(tmp, path)
     return np.load(path, mmap_mode="r"), waves, texts
 
 
