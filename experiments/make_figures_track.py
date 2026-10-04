@@ -164,8 +164,7 @@ def fig_padding():
     b.set_xticks(range(3))
     b.set_xticklabels([n for _, n in arms])
     b.set_ylabel("ΔWER vs full cache [95 % CI]")
-    b.set_title("medium: the sink carries content; small: it is a placeholder (colours as in (a))",
-                fontsize=7, color=INK2, pad=10)
+    b.set_title("colours as in (a)", fontsize=7, color=INK2, pad=6, loc="right")
     label(b, "(b)", x=-0.12)
     fig.tight_layout(w_pad=2.0)
     save(fig, "fig_t2_padding")
@@ -186,6 +185,7 @@ def budget_series(m):
     S["split"] = [e6[sk]["delta_vs_full"], dg["split/s0.5"]["delta_vs_full"], dg["split/s0.25"]["delta_vs_full"]]
     for r in ("h2o_layer", "pyramidkv"):
         S[r] = [sb[r]["delta_vs_full"], dg[f"{r}/s0.5"]["delta_vs_full"], dg[f"{r}/s0.25"]["delta_vs_full"]]
+    S["snapkv"] = [sb["snapkv"]["delta_vs_full"], dg["snapkv/s0.5"]["delta_vs_full"]]      # not run at K_i/4
     S["padsink"] = [sp[f"spar/rho{rho}"]["delta_vs_full"], dg["padsink/s0.5"]["delta_vs_full"],
                     dg["padsink/s0.25"]["delta_vs_full"]]
     S["track"] = [ab["track/s1.0"]["delta_vs_full"], tr["track/s0.5"]["delta_vs_full"],
@@ -202,6 +202,7 @@ def fig_budget():
         "split": dict(color=GREYS["split"], marker="s", label="calibrated split (one-shot)"),
         "h2o_layer": dict(color=GREYS["h2o_layer"], marker="v", label="H2O per layer (one-shot)"),
         "pyramidkv": dict(color=GREYS["pyramidkv"], marker="^", label="PyramidKV (one-shot)"),
+        "snapkv": dict(color="#55544f", marker="D", ls=(0, (1, 1)), label="SnapKV (one-shot; $K_i$, $K_i/2$)"),
         "padsink": dict(color=ORANGE, marker="o", label="PadSink-KV (one-shot)"),
         "track": dict(color=BLUE, marker="o", label="PadSink-Track", lw=2.0),
         "oracle": dict(color=INK, marker="x", ls="--", label="per-step oracle (not realizable)", lw=1.0),
@@ -215,7 +216,7 @@ def fig_budget():
             y = [v[0] for v in S[key]]
             kw = dict(st)
             kw.setdefault("lw", 1.2)
-            ax.plot(xs, y, ms=4, mec=kw["color"] if key == "oracle" else "white", mew=0.8 if key == "oracle" else 0.5, zorder=3 if key in ("track", "oracle") else 2, **kw)
+            ax.plot(xs[:len(y)], y, ms=4, mec=kw["color"] if key == "oracle" else "white", mew=0.8 if key == "oracle" else 0.5, zorder=3 if key in ("track", "oracle") else 2, **kw)
         ax.set_xscale("log", base=2)
         ax.set_xticks(xs)
         ax.set_xticklabels(["$K_i$", "$K_i/2$", "$K_i/4$"])
@@ -225,7 +226,7 @@ def fig_budget():
         ax.text(0.97, d * 1.25, "δ", color=MUTED, fontsize=7, ha="right", transform=ax.get_yaxis_transform())
     axs[0].set_ylabel("ΔWER vs full cache (symlog)")
     h, l = axs[0].get_legend_handles_labels()
-    fig.legend(h, l, loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.13))
+    fig.legend(h, l, loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.13), columnspacing=1.2)
     fig.tight_layout(w_pad=0.8)
     save(fig, "fig_t3_budget")
 
@@ -315,7 +316,7 @@ def fig_efficiency():
         for x, v in zip(xs, vals):
             axs[0].text(x, v + 0.6, f"{v:.0f}" if v >= 10 else f"{v:.1f}", ha="center", fontsize=6, color=INK2)
     axs[0].set_xticks([0.34, 1.34])
-    axs[0].set_xticklabels(["Whisper-medium", "Whisper-small"])
+    axs[0].set_xticklabels(["Whisper-medium\n(Uzbek)", "Whisper-small\n(English)"])
     axs[0].set_ylabel("decoder step, ms (t = 30, 1 thread)")
     axs[0].grid(axis="y", color=GRID, lw=0.5)
     axs[0].set_axisbelow(True)
@@ -336,7 +337,7 @@ def fig_efficiency():
         for x, v in zip(xs, vals):
             axs[1].text(x, v + 0.1, f"{v:.2f}", ha="center", fontsize=6, color=INK2)
     axs[1].set_xticks([0.3, 1.3])
-    axs[1].set_xticklabels(["Whisper-medium", "Whisper-small"])
+    axs[1].set_xticklabels(["Whisper-medium\n(Uzbek)", "Whisper-small\n(English)"])
     axs[1].set_ylabel("L3 load misses per step, millions")
     axs[1].grid(axis="y", color=GRID, lw=0.5)
     axs[1].set_axisbelow(True)
@@ -352,7 +353,7 @@ def fig_efficiency():
         for x, v in zip(xs, vals):
             axs[2].text(x, v + 0.8, f"{v:.1f}", ha="center", fontsize=6, color=INK2)
     axs[2].set_xticks([0.22, 1.22])
-    axs[2].set_xticklabels(["Whisper-medium", "Whisper-small"])
+    axs[2].set_xticklabels(["Whisper-medium\n(Uzbek)", "Whisper-small\n(English)"])
     axs[2].set_ylabel("whole-utterance decoding, ms per token")
     axs[2].grid(axis="y", color=GRID, lw=0.5)
     axs[2].set_axisbelow(True)
@@ -501,7 +502,7 @@ def fig_roofline():
     a.set_title("(a) Roofline, 1 thread", color=INK, loc="left")
     h, l = a.get_legend_handles_labels()
     h += [plt.Line2D([], [], marker="o", color=INK2, ls="none", ms=4), plt.Line2D([], [], marker="s", color=INK2, ls="none", ms=4)]
-    l += ["Whisper-medium", "Whisper-small"]
+    l += ["Whisper-medium (Uzbek)", "Whisper-small (English)"]
     a.legend(h, l, loc="lower right", fontsize=6, ncol=1)
     # (b) time vs bytes
     for name, marker in (("medium_uz", "o"), ("small_en", "s")):
@@ -550,7 +551,7 @@ def fig_system():
                    label="model: bytes the step must read" if (j == 0 and i == 0) else None)
             a.text(x, r["dram_read_B"] / MiB_ + 12, f"{r['dram_read_B'] / MiB_:.0f}", ha="center", fontsize=6, color=INK2)
     a.set_xticks([0, 1])
-    a.set_xticklabels(["Whisper-medium", "Whisper-small"])
+    a.set_xticklabels(["Whisper-medium\n(Uzbek)", "Whisper-small\n(English)"])
     a.set_ylabel("DRAM read per decoder step, MiB")
     a.set_ylim(0, 820)
     a.grid(axis="y", color=GRID, lw=0.5)
@@ -576,7 +577,7 @@ def fig_system():
     b.grid(color=GRID, lw=0.5)
     b.set_axisbelow(True)
     b.legend(fontsize=6, loc="lower right")
-    b.set_title("(b) Throughput of N streams sharing DRAM (medium)", color=INK, loc="left")
+    b.set_title("(b) Throughput of N streams sharing DRAM (Whisper-medium, Uzbek)", color=INK, loc="left")
     fig.tight_layout(w_pad=2.0)
     save(fig, "fig_t9_system")
 
