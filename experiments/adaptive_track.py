@@ -29,7 +29,20 @@ Pre-registered predictions (before any run):
   Refutation: no accepted arm for medium_en in a family -> that extension
   does not make the method universal.
 
-Usage:  python experiments/adaptive_track.py --setup medium_en --family adapt|fb
+Results: A1 refuted (no accepted adapt arm for medium_en on validation, even
+with a sink larger than K_i). A2 partly: medium_en passes on test with fb at
+tau = 0.9, 18 % of the steps redone (+0.0039 [+0.0018, +0.0064]); the rule
+"smallest accepted tau" took tau = 0.5 on the other three, where medium_uz
+came out Inconclusive (+0.046, six looping utterances).
+
+Follow-up, NOT pre-selected by the rule above (decided after seeing those
+results): one fixed tau = 0.9 for every model, run on the same 300 test
+utterances with --force-test 0.9. Prediction written before the run: all four
+models are accepted, with 2-20 % of the steps redone. Because tau = 0.9 was
+picked after the first test results, this is exploratory until repeated on
+the independent sets.
+
+Usage:  python experiments/adaptive_track.py --setup medium_en --family adapt|fb [--force-test 0.9]
 """
 
 import argparse
@@ -146,6 +159,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--setup", required=True, choices=list(SETUPS))
     ap.add_argument("--family", required=True, choices=list(ARMS))
+    ap.add_argument("--force-test", type=float, help="run this arm on test regardless of the selection rule")
     args = ap.parse_args()
     s, fam = SETUPS[args.setup], args.family
     e6 = json.load(open(os.path.join(HERE, f"results_eviction_budget_{s.name}.json")))
@@ -176,13 +190,16 @@ def main():
         print(f"  {s.name} valid {name:<11} k {r['kept']:5.0f} (K_i {res['k_i_valid']:.0f})  redone {r['redone_share']:.0%}  "
               f"{r['delta_vs_full'][0]:+.4f} [{r['delta_vs_full'][1]:+.4f}, {r['delta_vs_full'][2]:+.4f}]  {r['gate']} (delta {r['delta']})", flush=True)
     ok = [n for n, r in res["valid"].items() if r["gate"] == "Accepted"]
+    if args.force_test is not None:
+        ok = [f"{fam}/{args.force_test}"]
     if not ok:
         res["choice"] = None
         json.dump(res, open(out_json, "w"), indent=1)
         print(f"  {s.name} {fam}: no accepted arm on validation -> full cache", flush=True)
         return
     choice = min(ok, key=(lambda n: res["valid"][n]["kept"]) if fam == "adapt" else (lambda n: float(n.split("/")[1])))
-    res["choice"] = choice
+    if args.force_test is None:
+        res["choice"] = choice
     if choice not in res["test"]:
         wers, kept, share = run_arm(s, "test", 300, fam, float(choice.split("/")[1]), ctx)
         d, v, delta = gate(wers, e6["test"]["full"]["per_sample_wer"])
