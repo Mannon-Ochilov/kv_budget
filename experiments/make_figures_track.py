@@ -461,7 +461,7 @@ def fig_method_full():
                 color=ORANGE if n < 2 else INK)
     ax.text(x0 + 11 * sw + 1.2, y0 + 1.6,
             "ring buffer of one layer: slots of positions that left the window (101, 102) are overwritten\n"
-            "with the entering ones (109, 110); in real decoding ~11 slots per step on average (~5 % of the\n"
+            "with the entering ones (109, 110); in real decoding 13–17 slots per step on average (7–19 % of the\n"
             "window), with no per-step gather. s = sink slots. Attention does not depend on slot order.",
             fontsize=6, color=INK2, va="center")
     save(fig, "fig_t1_method")
