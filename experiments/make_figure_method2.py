@@ -61,7 +61,7 @@ def main():
         return (lambda p_: x0 + (p_ + 0.5) * cw), (lambda t_: y_top - (t_ + 0.5) * rh)
 
     # (a) one-shot
-    cx, cy = grid(9, 2, "(a)  One-shot retention", "H2O, SnapKV, PyramidKV and the sink + one-shot audio variant")
+    cx, cy = grid(9, 2, "(a)  One-shot retention", "H2O, SnapKV, PyramidKV, sink + one-shot audio")
     kept = np.unique(np.concatenate([[0, 1, 2, 3, 5, 6], sinks]))
     for p_ in kept:
         ax.add_patch(Rectangle((cx(p_) - cw * 0.42, y_bot), cw * 0.84, y_top - y_bot, fc=GREYS["h2o_layer"], alpha=0.8, ec="none"))
@@ -70,7 +70,7 @@ def main():
         ax.plot(cx(p_), cy(t_), marker="o" if hit else "x", ms=3.2 if hit else 3.6, color=INK if hit else RED, mew=1.1, zorder=3)
 
     # (b) PadSink-Track: the peak sits 0.1 w from the left edge of the window
-    cx, cy = grid(74, 67, "(b)  PadSink-Track", "the selection is renewed at every step")
+    cx, cy = grid(74, 68, "(b)  PadSink-Track", "the selection is renewed at every step")
     w = 7
     for t_, p_ in enumerate(need):
         left = max(cx(p_) - 0.1 * w * cw, 74)
@@ -90,6 +90,11 @@ def main():
         y = 101.5 - n * 5.6
         ax.plot(134, y, marker=mk, ms=5.5 if mk == "s" else 3.6, color=col, mew=1.1, alpha=0.6 if col == BLUE else 1)
         ax.text(138, y, txt, linespacing=1.15, **t)
+
+    # separators between the panels and the legend
+    for xa in (64.5, 129.0):
+        ax.plot([xa, xa], [76.4, 116], color=MUTED, lw=0.6, ls=DASH)
+    ax.plot([1, 172], [76.4, 76.4], color=MUTED, lw=0.6, ls=DASH)
 
     # (c) the step loop
     ax.text(2, 73.5, "(c)  One decoding step of PadSink-Track", fontsize=8, fontweight="bold", color=INK, va="center")
