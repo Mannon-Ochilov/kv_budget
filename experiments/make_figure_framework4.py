@@ -142,7 +142,7 @@ def main():
     bx.text(150, 74.4, "τ* from (a)", ha="center", **t)
 
     # configuration feeds the ring buffer
-    ax.plot([58.5, 58.5], [14, 104], color=MUTED, lw=0.6, ls=DASH)     # between the panels
+    ax.plot([58.5, 58.5], [14, 107.6], color=MUTED, lw=0.6, ls=DASH)     # between the panels
     arrow(ax, (55, 17.95), (63.5, 17.95), (63.5, 63.5), (62 + DX, 63.5))
     ax.text(65.4, 23.5, "$K_i$, ρ", rotation=90, ha="center", **t)
 
