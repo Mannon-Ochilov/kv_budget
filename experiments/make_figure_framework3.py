@@ -4,11 +4,13 @@
     tau rule drawn as separate checks (Algorithm 3);
 (b) one decoding step with the cache strip, the ring buffer, the confidence
     check and the full-cache fallback (Algorithm 2);
-(c) what a step reads on the two paths, to scale for k = 196.
+(c) what a step reads on the two paths, to scale for k = 196 (optional).
 
-Output: figures/fig_t11_framework_v3.png|pdf
-Usage:  python experiments/make_figure_framework3.py
+Output: figures/fig_t11_framework_v3.png|pdf, or fig_t11_framework_v4 with --no-c
+Usage:  python experiments/make_figure_framework3.py [--no-c] [--palatino]
 """
+
+import sys
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, FancyArrowPatch, FancyBboxPatch, Polygon, Rectangle
@@ -18,7 +20,9 @@ from make_figures_track import BLUE, CM, FULL, INK, INK2, MUTED, ORANGE, save
 PALE_B, PALE_O, PALE_G = "#e6f0fb", "#fdebe3", "#f1f0ec"
 PAD = "#eeeeea"
 DASH = (0, (3, 2))
-X0, X1, Y0, Y1 = -1, 172, -28, 108
+X0, X1, Y1 = -1, 172, 108
+PALATINO = {"font.family": "Palatino Linotype", "mathtext.fontset": "custom", "mathtext.rm": "Palatino Linotype",
+            "mathtext.it": "Palatino Linotype:italic", "mathtext.bf": "Palatino Linotype:bold", "mathtext.fallback": "cm"}
 
 
 def badge(ax, x, y, num, ec):
@@ -50,18 +54,21 @@ def diamond(ax, cx, cy, hw, hh, text, fc="white", fs=5.5):
     ax.text(cx, cy, text, ha="center", va="center", fontsize=fs, color=INK, linespacing=1.15)
 
 
-def main():
-    fig, ax = plt.subplots(figsize=(FULL, FULL * (Y1 - Y0) / (X1 - X0)))   # equal units: badges stay round
+def main(panel_c=True, palatino=False):
+    if palatino:
+        plt.rcParams.update(PALATINO)
+    y_min = -28 if panel_c else -15
+    fig, ax = plt.subplots(figsize=(FULL, FULL * (Y1 - y_min) / (X1 - X0)))   # equal units: badges stay round
     fig.subplots_adjust(0, 0, 1, 1)
     ax.set_xlim(X0, X1)
-    ax.set_ylim(Y0, Y1)
+    ax.set_ylim(y_min, Y1)
     ax.axis("off")
     t = dict(fontsize=6.0, color=INK2, va="center")
     small = {**t, "fontsize": 5.4}
 
     # ------------------------------------------------ (a) calibration
     ax.text(1, 105.5, "(a)  Calibration, once per model", fontsize=8, fontweight="bold", color=INK, va="center")
-    box(ax, 1, 91.5, 54, 9, "Validation set (300 utterances)", "full cache → WER$_{full}$;  gate δ = 0.2·WER$_{full}$",
+    box(ax, 1, 91.5, 54, 9, "Validation set (300 utterances)", "full cache $\\rightarrow$ WER$_{full}$;  gate δ = 0.2·WER$_{full}$",
         fc="white", ec=MUTED, fs=5.8)
     box(ax, 1, 77, 54, 12, "Budget  $K_i$", "split rule ($f_r$, $f_p$): smallest kept set\nwithin the gate δ", num=1)
     box(ax, 1, 62.5, 54, 12, "Sink mass  ρ", "smallest padding set holding ρ of the\nfirst-step padding mass;  |$S_ℓ$| ≤ 0.25·k", num=2)
@@ -114,14 +121,14 @@ def main():
     box(ax, 102.5, 69.5, 43, 13, text="First step (t = 1) on the full cache:\ncomputes K, V, selects $S_ℓ$\nand the start peak $c_1$",
         fc="white", ec=MUTED, ls=DASH, fs=5.8)
     box(ax, 62, 48, 38, 16, "Ring buffer  $B_ℓ$", "$S_ℓ ∪ W_t$\nk = 0.5·$K_i$ positions per layer", fc=PALE_B, ec=BLUE, num=4)
-    box(ax, 106, 48, 26, 16, "Decoder step", "reads only $B_ℓ$ →\nlogits z, attention a", fc=PALE_B, ec=BLUE, num=5)
+    box(ax, 106, 48, 26, 16, "Decoder step", "reads only $B_ℓ$ $\\rightarrow$\nlogits z, attention a", fc=PALE_B, ec=BLUE, num=5)
     diamond(ax, 150, 56, 15, 9.5, "max softmax(z)\n≥ τ* ?", fc=PALE_O, fs=6.2)
     badge(ax, 141.5, 62.4, 6, ORANGE)
     box(ax, 112, 6, 57.5, 18, "Redo on the full cache",
         "same step on 1500 positions;\nz, a and the self-attention cache from this run;\nthe peak is then searched over all audio",
         fc=PALE_O, ec=ORANGE, num=7)
     box(ax, 62, 6, 42, 18, "Emit token $y_t$, move window",
-        "c ← max(c, alignment-head peak);\noverwrite only the slots\nthat left the window", fc=PALE_B, ec=BLUE, num=8)
+        "c $\\leftarrow$ max(c, alignment-head peak);\noverwrite only the slots\nthat left the window", fc=PALE_B, ec=BLUE, num=8)
 
     # ring-buffer cells of one layer
     cw, cy, ch = 3.4, 33.0, 4.6
@@ -159,6 +166,17 @@ def main():
 
     # ------------------------------------------------ (c) what a step reads
     ax.plot([0, 171], [-7.5, -7.5], color="#d9d8d3", lw=0.6)
+    if not panel_c:                                    # legend in one row
+        ax.add_patch(Rectangle((1, -12.4), 3.4, 2.4, fc=PALE_B, ec=BLUE, lw=0.7))
+        ax.text(6, -11.2, "PadSink-Track fast path", **t)
+        ax.add_patch(Rectangle((36, -12.4), 3.4, 2.4, fc=PALE_O, ec=ORANGE, lw=0.7))
+        ax.text(41, -11.2, "padding sink / fallback", **t)
+        arrow(ax, (70, -11.2), (74.5, -11.2))
+        ax.text(76, -11.2, "every step / every arm", **t)
+        arrow(ax, (105, -11.2), (109.5, -11.2), color=MUTED, ls=DASH)
+        ax.text(111, -11.2, "conditional: first step, fallback, last arm", **t)
+        save(fig, "fig_t11_framework_v4")
+        return
     ax.text(62, -11.5, "(c)  What a step reads", fontsize=8, fontweight="bold", color=INK, va="center")
     full_len = 70.0
     ax.add_patch(Rectangle((62, -18.4), full_len * 196 / 1500, 2.8, fc=BLUE, ec="none"))
@@ -179,4 +197,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(panel_c="--no-c" not in sys.argv, palatino="--palatino" in sys.argv)
