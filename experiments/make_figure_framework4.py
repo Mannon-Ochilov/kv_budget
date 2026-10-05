@@ -147,7 +147,7 @@ def main():
     ax.text(65.4, 23.5, "$K_i$, ρ", rotation=90, ha="center", **t)
 
     # ------------------------------------------------ legend, one row
-    ax.plot([0, 171 + DX], [11.6, 11.6], color="#d9d8d3", lw=0.6)
+    ax.plot([0, 171 + DX], [11.6, 11.6], color=MUTED, lw=0.6, ls=DASH)
     ax.add_patch(Rectangle((1, 6.3), 3.4, 2.4, fc=PALE_B, ec=BLUE, lw=0.7))
     ax.text(6, 7.5, "PadSink-Track fast path", **t)
     ax.add_patch(Rectangle((36, 6.3), 3.4, 2.4, fc=PALE_O, ec=ORANGE, lw=0.7))
