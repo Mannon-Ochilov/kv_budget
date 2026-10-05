@@ -20,7 +20,7 @@ from make_figures_track import BLUE, FULL, GREYS, INK, INK2, MUTED, ORANGE, save
 PALE_B, PALE_O, PALE_G = "#e6f0fb", "#fdebe3", "#f1f0ec"
 RED = "#d23b3b"
 DASH = (0, (3, 2))
-X0, X1, Y0, Y1 = 0, 173, 0, 117
+X0, X1, Y0, Y1 = 0, 173, 24, 117
 
 
 def arrow(ax, *pts, color=INK2):
@@ -42,7 +42,7 @@ def main():
     rng = np.random.default_rng(7)
     need = np.clip(np.round(np.linspace(1, RN - 2, T) + rng.normal(0, 0.5, T)), 0, RN - 1).astype(int)
     sinks = np.array([RN + 1, RN + 2, RN + 5, RN + 9, RN + 14])
-    gw, y_top, y_bot = 50.0, 101.0, 73.0
+    gw, y_top, y_bot = 50.0, 103.0, 81.0
     cw, rh = gw / P, (y_top - y_bot) / T
 
     def grid(x0, xt, title, sub):
@@ -87,13 +87,13 @@ def main():
              (BLUE, "s", "window $W_t$: follows\nthe alignment peak $c_t$"),
              (ORANGE, "s", "padding sink $S_ℓ$: exact\nK/V, chosen at t = 1")]
     for n, (col, mk, txt) in enumerate(items):
-        y = 100 - n * 6.6
+        y = 101.5 - n * 5.6
         ax.plot(134, y, marker=mk, ms=5.5 if mk == "s" else 3.6, color=col, mew=1.1, alpha=0.6 if col == BLUE else 1)
         ax.text(138, y, txt, linespacing=1.15, **t)
 
     # (c) the step loop
-    ax.text(2, 63.5, "(c)  One decoding step of PadSink-Track", fontsize=8, fontweight="bold", color=INK, va="center")
-    bw, bh, gap, by = 30.6, 18.5, 4.5, 40.0
+    ax.text(2, 73.5, "(c)  One decoding step of PadSink-Track", fontsize=8, fontweight="bold", color=INK, va="center")
+    bw, bh, gap, by = 30.6, 17.5, 4.5, 52.0
     boxes = [("1. Initialize (t = 1)", "use the full cache; select\nsink $S_ℓ$: smallest set with ρ\nof padding mass, at most\n0.25·k;  start peak $c_1$",
               PALE_O, ORANGE),
              ("2. Ring buffer", "$B_ℓ = W_t ∪ S_ℓ$\nk = |$S_ℓ$| + $w_ℓ$\npositions per layer", PALE_B, BLUE),
@@ -109,24 +109,24 @@ def main():
     for x in xs[:-1]:
         arrow(ax, (x + bw, by + bh / 2), (x + bw + gap, by + bh / 2))
     x5, x2 = xs[4] + bw / 2, xs[1] + bw / 2
-    arrow(ax, (x5, by), (x5, 35), (x2, 35), (x2, by))
-    ax.text((x5 + x2) / 2, 33.1, "next step", ha="center", **t)
+    arrow(ax, (x5, by), (x5, 48.5), (x2, 48.5), (x2, by))
+    ax.text((x5 + x2) / 2, 46.7, "next step", ha="center", **t)
 
     # ring buffer of one layer (zoom of box 2)
-    zx0, zx1, zy0, zy1 = 1.0, 86.0, 2.0, 28.5
+    zx0, zx1, zy0, zy1 = 1.0, 86.0, 25.5, 43.5
     ax.add_patch(Rectangle((zx0, zy0), zx1 - zx0, zy1 - zy0, fc="none", ec=BLUE, lw=0.6, ls=DASH))
     ax.plot([xs[1], zx0], [by, zy1], color=BLUE, lw=0.6, ls=DASH)
     ax.plot([xs[1] + bw, zx1], [by, zy1], color=BLUE, lw=0.6, ls=DASH)
-    ax.text((zx0 + zx1) / 2, 25.3, "Ring buffer of one layer (size k)", ha="center", va="center", fontsize=6.6, fontweight="bold", color=INK)
-    sw, sx, sy, sh = 6.6, 7.2, 15.2, 5.6
+    ax.text((zx0 + zx1) / 2, 41, "Ring buffer of one layer (size k)", ha="center", va="center", fontsize=6.6, fontweight="bold", color=INK)
+    sw, sx, sy, sh = 6.6, 7.2, 33.2, 5.0
     labels = ["109", "110", "103", "104", "105", "106", "107", "108", "s", "s", "s"]
     for n, lab in enumerate(labels):
         fc, ec = ("white", ORANGE) if n < 2 else ((PALE_O, ORANGE) if lab == "s" else (PALE_B, BLUE))
         ax.add_patch(Rectangle((sx + n * sw, sy), sw, sh, fc=fc, ec=ec, lw=0.6))
         ax.text(sx + (n + 0.5) * sw, sy + sh / 2, lab, ha="center", va="center", fontsize=5.6, color=INK)
     for c, txt in ((1, "entering positions\n(overwrite 101, 102)"), (5, "positions kept\nfrom step t − 1"), (9.5, "sink positions\n($S_ℓ$)")):
-        ax.text(sx + c * sw, 9.4, txt, ha="center", linespacing=1.15, **{**t, "fontsize": 5.6})
-    ax.text(91, 15.5,
+        ax.text(sx + c * sw, 29.4, txt, ha="center", linespacing=1.15, **{**t, "fontsize": 5.6})
+    ax.text(91, 34.5,
             "Slots of positions that left the window (101, 102) are overwritten\n"
             "with the entering ones (109, 110), with no per-step gather.\n"
             "s = sink slots. Attention does not depend on slot order.", linespacing=1.3, **t)
