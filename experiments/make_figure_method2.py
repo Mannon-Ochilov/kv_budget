@@ -20,7 +20,7 @@ from make_figures_track import BLUE, FULL, GREYS, INK, INK2, MUTED, ORANGE, save
 PALE_B, PALE_O, PALE_G = "#e6f0fb", "#fdebe3", "#f1f0ec"
 RED = "#d23b3b"
 DASH = (0, (3, 2))
-X0, X1, Y0, Y1 = 0, 173, 24, 117
+X0, X1, Y0, Y1 = 0, 173, 24, 120
 
 
 def arrow(ax, *pts, color=INK2):
@@ -42,7 +42,7 @@ def main():
     rng = np.random.default_rng(7)
     need = np.clip(np.round(np.linspace(1, RN - 2, T) + rng.normal(0, 0.5, T)), 0, RN - 1).astype(int)
     sinks = np.array([RN + 1, RN + 2, RN + 5, RN + 9, RN + 14])
-    gw, y_top, y_bot = 47.0, 103.0, 81.0
+    gw, y_top, y_bot = 47.0, 106.0, 84.0
     cw, rh = gw / P, (y_top - y_bot) / T
 
     def grid(x0, xt, title, sub):
@@ -50,8 +50,8 @@ def main():
         ax.add_patch(Rectangle((x0 + RN * cw, y_bot), (P - RN) * cw, y_top - y_bot, fc="#f2f1ec", ec="none"))
         ax.plot([x0 + RN * cw] * 2, [y_bot, y_top], color=MUTED, lw=0.5)
         ax.add_patch(Rectangle((x0, y_bot), gw, y_top - y_bot, fc="none", ec=INK2, lw=0.6, zorder=4))
-        ax.text(xt, 113.5, title, fontsize=8, fontweight="bold", color=INK, va="center")
-        ax.text(xt, 109.3, sub, **t)
+        ax.text(xt, 116.5, title, fontsize=8, fontweight="bold", color=INK, va="center")
+        ax.text(xt, 112.3, sub, **t)
         ax.text(x0 + gw / 2, y_top + 2.2, "encoder positions →", ha="center", **{**t, "color": INK2})
         ax.text(x0 + RN * cw / 2, y_bot - 2.3, "speech ($n_r$ positions)", ha="center", **t)
         ax.text(x0 + RN * cw + (P - RN) * cw / 2, y_bot - 2.3, "padding (≈ 80 %)", ha="center", **t)
@@ -87,14 +87,14 @@ def main():
              (BLUE, "s", "window $W_t$: follows\nthe alignment peak $c_t$"),
              (ORANGE, "s", "padding sink $S_ℓ$: exact\nK/V, chosen at t = 1")]
     for n, (col, mk, txt) in enumerate(items):
-        y = 108.6 - n * 6.2                    # centred in the legend column
+        y = 111.6 - n * 6.2                    # centred in the legend column
         ax.plot(131.5, y, marker=mk, ms=5.5 if mk == "s" else 3.6, color=col, mew=1.1, alpha=0.6 if col == BLUE else 1)
         ax.text(135.5, y, txt, linespacing=1.15, **t)
 
     # separators between the panels and the legend
     for xa in (62.0, 126.0):
-        ax.plot([xa, xa], [80, 116], color=MUTED, lw=0.6, ls=DASH)
-    ax.plot([1, 172], [76.4, 76.4], color=MUTED, lw=0.6, ls=DASH)
+        ax.plot([xa, xa], [79.6, 119.6], color=MUTED, lw=0.6, ls=DASH)
+    ax.plot([1, 172], [78, 78], color=MUTED, lw=0.6, ls=DASH)
 
     # (c) the step loop
     ax.text(2, 73.5, "(c)  One decoding step of PadSink-Track", fontsize=8, fontweight="bold", color=INK, va="center")
