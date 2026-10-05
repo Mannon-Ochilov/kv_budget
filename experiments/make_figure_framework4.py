@@ -10,11 +10,30 @@ Usage:  python experiments/make_figure_framework4.py
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+from matplotlib.transforms import Affine2D
 
 from make_figure_framework3 import DASH, PAD, PALE_B, PALE_G, PALE_O, arrow, badge, box, diamond
 from make_figures_track import BLUE, FULL, INK, INK2, MUTED, ORANGE, save
 
-X0, X1, Y0, Y1 = -1, 172, 4, 108
+DX = 6.0
+X0, X1, Y0, Y1 = -1, 172 + DX, 4, 108
+
+
+class Shifted:
+    """The drawing calls of an Axes, moved dx to the right."""
+
+    def __init__(self, ax, dx):
+        self.ax, self.dx = ax, dx
+
+    def text(self, x, y, *a, **k):
+        return self.ax.text(x + self.dx, y, *a, **k)
+
+    def plot(self, xs, ys, *a, **k):
+        return self.ax.plot([x + self.dx for x in xs], ys, *a, **k)
+
+    def add_patch(self, patch):
+        patch.set_transform(Affine2D().translate(self.dx, 0) + self.ax.transData)
+        return self.ax.add_patch(patch)
 
 
 def main():
@@ -61,34 +80,35 @@ def main():
     arrow(ax, (46.5, 25.2), (46.5, 20.7), color=MUTED, ls=DASH)
 
     # ------------------------------------------------ (b) decoding step
-    ax.text(62, 105.5, "(b)  Decoding step t", fontsize=8, fontweight="bold", color=INK, va="center")
+    bx = Shifted(ax, DX)                             # panel (b) sits DX to the right
+    bx.text(62, 105.5, "(b)  Decoding step t", fontsize=8, fontweight="bold", color=INK, va="center")
     x0, x1, ys, hs = 62.0, 169.5, 89.0, 5.5
     xs = x0 + 0.2 * (x1 - x0)                        # end of speech
     wx, ww = 67.0, 10.5                              # window: the peak sits 0.1 w from its left edge
-    ax.add_patch(Rectangle((x0, ys), xs - x0, hs, fc="white", ec="none"))
-    ax.add_patch(Rectangle((xs, ys), x1 - xs, hs, fc=PAD, ec="none"))
-    ax.add_patch(Rectangle((wx, ys), ww, hs, fc=BLUE, ec="none", alpha=0.45))
+    bx.add_patch(Rectangle((x0, ys), xs - x0, hs, fc="white", ec="none"))
+    bx.add_patch(Rectangle((xs, ys), x1 - xs, hs, fc=PAD, ec="none"))
+    bx.add_patch(Rectangle((wx, ys), ww, hs, fc=BLUE, ec="none", alpha=0.45))
     for xb in (88.5, 91.5, 100, 119, 142):
-        ax.add_patch(Rectangle((xb, ys), 0.9, hs, fc=ORANGE, ec="none"))
-    ax.plot([xs, xs], [ys, ys + hs], color=MUTED, lw=0.5)
-    ax.add_patch(Rectangle((x0, ys), x1 - x0, hs, fc="none", ec=INK2, lw=0.7))
-    ax.plot([wx + 0.1 * ww], [ys + hs / 2], "o", ms=3.0, color=INK)
-    ax.text(x0, 100.6, "Full cross-attention cache K, V — 1500 positions per layer (stays in DRAM)", fontsize=6.6, color=INK, va="center")
-    ax.text(x0, 96.7, "blue: window $W_t$ = [$c_t$ − 0.1·$w_ℓ$, $c_t$ + 0.9·$w_ℓ$), moves with decoding;  ● = alignment peak $c_t$", ha="left", **t)
-    ax.text(x0, 86.6, "speech ($n_r$ positions)", ha="left", **t)
-    ax.text(112, 86.6, "padding (≈ 80 %)", ha="center", **t)
-    ax.text(165.6, 86.6, "orange: padding sink $S_ℓ$ (fixed)", ha="right", **t)
+        bx.add_patch(Rectangle((xb, ys), 0.9, hs, fc=ORANGE, ec="none"))
+    bx.plot([xs, xs], [ys, ys + hs], color=MUTED, lw=0.5)
+    bx.add_patch(Rectangle((x0, ys), x1 - x0, hs, fc="none", ec=INK2, lw=0.7))
+    bx.plot([wx + 0.1 * ww], [ys + hs / 2], "o", ms=3.0, color=INK)
+    bx.text(x0, 100.6, "Full cross-attention cache K, V — 1500 positions per layer (stays in DRAM)", fontsize=6.6, color=INK, va="center")
+    bx.text(x0, 96.7, "blue: window $W_t$ = [$c_t$ − 0.1·$w_ℓ$, $c_t$ + 0.9·$w_ℓ$), moves with decoding;  ● = alignment peak $c_t$", ha="left", **t)
+    bx.text(x0, 86.6, "speech ($n_r$ positions)", ha="left", **t)
+    bx.text(112, 86.6, "padding (≈ 80 %)", ha="center", **t)
+    bx.text(165.6, 86.6, "orange: padding sink $S_ℓ$ (fixed)", ha="right", **t)
 
-    box(ax, 101.5, 73.5, 40, 10, text="First step (t = 1) on the full cache:\ncomputes K, V, selects $S_ℓ$\nand the start peak $c_1$",
+    box(bx, 101.5, 73.5, 40, 10, text="First step (t = 1) on the full cache:\ncomputes K, V, selects $S_ℓ$\nand the start peak $c_1$",
         fc="white", ec=MUTED, ls=DASH, fs=5.8)
-    box(ax, 62, 57, 38, 13, "Ring buffer  $B_ℓ$", "$S_ℓ ∪ W_t$\nk = 0.5·$K_i$ positions per layer", fc=PALE_B, ec=BLUE, num=4)
-    box(ax, 106, 57, 26, 13, "Decoder step", "reads only $B_ℓ$ $\\rightarrow$\nlogits z, attention a", fc=PALE_B, ec=BLUE, num=5)
-    diamond(ax, 150, 63.5, 15, 9, "max softmax(z)\n≥ τ* ?", fc=PALE_O, fs=6.2)
-    badge(ax, 139, 66.6, 6, ORANGE)
-    box(ax, 112, 15.2, 57.5, 15, "Redo on the full cache",
+    box(bx, 62, 57, 38, 13, "Ring buffer  $B_ℓ$", "$S_ℓ ∪ W_t$\nk = 0.5·$K_i$ positions per layer", fc=PALE_B, ec=BLUE, num=4)
+    box(bx, 106, 57, 26, 13, "Decoder step", "reads only $B_ℓ$ $\\rightarrow$\nlogits z, attention a", fc=PALE_B, ec=BLUE, num=5)
+    diamond(bx, 150, 63.5, 15, 9, "max softmax(z)\n≥ τ* ?", fc=PALE_O, fs=6.2)
+    badge(bx, 139, 66.6, 6, ORANGE)
+    box(bx, 112, 15.2, 57.5, 15, "Redo on the full cache",
         "same step on 1500 positions;\nz, a and the self-attention cache from this run;\nthe peak is then searched over all audio",
         fc=PALE_O, ec=ORANGE, num=7)
-    box(ax, 62, 15.2, 42, 15, "Emit token $y_t$, move window",
+    box(bx, 62, 15.2, 42, 15, "Emit token $y_t$, move window",
         "c $\\leftarrow$ max(c, alignment-head peak);\noverwrite only the slots\nthat left the window", fc=PALE_B, ec=BLUE, num=8)
 
     # ring-buffer cells of one layer
@@ -96,37 +116,38 @@ def main():
     cells = [("109", "white", ORANGE), ("110", "white", ORANGE)] + [(str(n), PALE_B, BLUE) for n in range(103, 109)] \
         + [("s", PALE_O, ORANGE)] * 3
     for i, (lab, fc, ec) in enumerate(cells):
-        ax.add_patch(Rectangle((62 + i * cw, cy), cw, ch, fc=fc, ec=ec, lw=0.6))
-        ax.text(62 + (i + 0.5) * cw, cy + ch / 2, lab, ha="center", va="center", fontsize=4.6, color=INK)
-    ax.text(62 + cw, 41.4, "entering", ha="center", **{**t, "fontsize": 5.3})
-    ax.text(62 + 5 * cw, 41.4, "kept from step t − 1", ha="center", **{**t, "fontsize": 5.3})
-    ax.text(62 + 9.5 * cw, 41.4, "sink", ha="center", **{**t, "fontsize": 5.3})
-    ax.text(62, 38.6, "109, 110 overwrite the slots of 101, 102", ha="left", **{**t, "fontsize": 5.3})
-    ax.text(62, 50.6, "slots of $B_ℓ$ (one layer)", ha="left", **small)
-    ax.plot([63.5, 63.5], [57, 52.2], color=BLUE, lw=0.6, ls=(0, (1, 1.5)))
+        bx.add_patch(Rectangle((62 + i * cw, cy), cw, ch, fc=fc, ec=ec, lw=0.6))
+        bx.text(62 + (i + 0.5) * cw, cy + ch / 2, lab, ha="center", va="center", fontsize=4.6, color=INK)
+    bx.text(62 + cw, 41.4, "entering", ha="center", **{**t, "fontsize": 5.3})
+    bx.text(62 + 5 * cw, 41.4, "kept from step t − 1", ha="center", **{**t, "fontsize": 5.3})
+    bx.text(62 + 9.5 * cw, 41.4, "sink", ha="center", **{**t, "fontsize": 5.3})
+    bx.text(62, 38.6, "109, 110 overwrite the slots of 101, 102", ha="left", **{**t, "fontsize": 5.3})
+    bx.text(62, 50.6, "slots of $B_ℓ$ (one layer)", ha="left", **small)
+    bx.plot([63.5, 63.5], [57, 52.2], color=BLUE, lw=0.6, ls=(0, (1, 1.5)))
 
-    arrow(ax, (86, ys - 4.6), (86, 70), color=MUTED)                    # cache -> buffer
-    ax.text(87.5, 78.5, "slots entering\nthe window", linespacing=1.15, **t)
-    arrow(ax, (101.5, 74.5), (97, 70), color=MUTED, ls=DASH)            # first step -> buffer
-    arrow(ax, (100, 63.5), (106, 63.5))
-    arrow(ax, (132, 63.5), (135, 63.5))
-    arrow(ax, (150, 54.5), (150, 30.2), color=ORANGE)                   # no -> redo
-    ax.text(151.5, 42.5, "no:\nfallback", linespacing=1.15, **t)
-    arrow(ax, (167.6, ys), (167.6, 30.2), color=MUTED, ls=DASH)         # cache -> redo
-    ax.text(166.4, 79, "all 1500\npositions", ha="right", linespacing=1.15, **t)
-    arrow(ax, (142.6, 58.9), (104.3, 30.6), color=BLUE)                 # yes -> emit
-    ax.text(127, 43.5, "yes: fast path", ha="left", **t)
-    arrow(ax, (112, 22.7), (104, 22.7), color=ORANGE)                   # redo -> emit
-    arrow(ax, (101.8, 30.2), (101.8, 54.5), (99.6, 57.1), color=BLUE)   # emit -> buffer
-    ax.text(103, 45, "t + 1", **t)
-    ax.text(150, 74.4, "τ* from (a)", ha="center", **t)
+    arrow(bx, (86, ys - 4.6), (86, 70), color=MUTED)                    # cache -> buffer
+    bx.text(87.5, 78.5, "slots entering\nthe window", linespacing=1.15, **t)
+    arrow(bx, (101.5, 74.5), (97, 70), color=MUTED, ls=DASH)            # first step -> buffer
+    arrow(bx, (100, 63.5), (106, 63.5))
+    arrow(bx, (132, 63.5), (135, 63.5))
+    arrow(bx, (150, 54.5), (150, 30.2), color=ORANGE)                   # no -> redo
+    bx.text(151.5, 42.5, "no:\nfallback", linespacing=1.15, **t)
+    arrow(bx, (167.6, ys), (167.6, 30.2), color=MUTED, ls=DASH)         # cache -> redo
+    bx.text(166.4, 79, "all 1500\npositions", ha="right", linespacing=1.15, **t)
+    arrow(bx, (142.6, 58.9), (104.3, 30.6), color=BLUE)                 # yes -> emit
+    bx.text(127, 43.5, "yes: fast path", ha="left", **t)
+    arrow(bx, (112, 22.7), (104, 22.7), color=ORANGE)                   # redo -> emit
+    arrow(bx, (101.8, 30.2), (101.8, 54.5), (99.6, 57.1), color=BLUE)   # emit -> buffer
+    bx.text(103, 45, "t + 1", **t)
+    bx.text(150, 74.4, "τ* from (a)", ha="center", **t)
 
     # configuration feeds the ring buffer
-    arrow(ax, (55, 17.95), (58.5, 17.95), (58.5, 63.5), (62, 63.5))
-    ax.text(60.3, 23.5, "$K_i$, ρ", rotation=90, ha="center", **t)
+    ax.plot([58.5, 58.5], [14, 104], color=MUTED, lw=0.6, ls=DASH)     # between the panels
+    arrow(ax, (55, 17.95), (63.5, 17.95), (63.5, 63.5), (62 + DX, 63.5))
+    ax.text(65.4, 23.5, "$K_i$, ρ", rotation=90, ha="center", **t)
 
     # ------------------------------------------------ legend, one row
-    ax.plot([0, 171], [11.6, 11.6], color="#d9d8d3", lw=0.6)
+    ax.plot([0, 171 + DX], [11.6, 11.6], color="#d9d8d3", lw=0.6)
     ax.add_patch(Rectangle((1, 6.3), 3.4, 2.4, fc=PALE_B, ec=BLUE, lw=0.7))
     ax.text(6, 7.5, "PadSink-Track fast path", **t)
     ax.add_patch(Rectangle((36, 6.3), 3.4, 2.4, fc=PALE_O, ec=ORANGE, lw=0.7))
