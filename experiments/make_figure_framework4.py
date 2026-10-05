@@ -123,7 +123,7 @@ def main():
 
     # configuration feeds the ring buffer
     arrow(ax, (55, 17.95), (58.5, 17.95), (58.5, 63.5), (62, 63.5))
-    ax.text(60.3, 33, "$K_i$, ρ", rotation=90, ha="center", **t)
+    ax.text(60.3, 23.5, "$K_i$, ρ", rotation=90, ha="center", **t)
 
     # ------------------------------------------------ legend, one row
     ax.plot([0, 171], [11.6, 11.6], color="#d9d8d3", lw=0.6)
