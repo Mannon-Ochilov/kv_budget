@@ -42,7 +42,7 @@ def main():
     rng = np.random.default_rng(7)
     need = np.clip(np.round(np.linspace(1, RN - 2, T) + rng.normal(0, 0.5, T)), 0, RN - 1).astype(int)
     sinks = np.array([RN + 1, RN + 2, RN + 5, RN + 9, RN + 14])
-    gw, y_top, y_bot = 50.0, 103.0, 81.0
+    gw, y_top, y_bot = 47.0, 103.0, 81.0
     cw, rh = gw / P, (y_top - y_bot) / T
 
     def grid(x0, xt, title, sub):
@@ -70,10 +70,10 @@ def main():
         ax.plot(cx(p_), cy(t_), marker="o" if hit else "x", ms=3.2 if hit else 3.6, color=INK if hit else RED, mew=1.1, zorder=3)
 
     # (b) PadSink-Track: the peak sits 0.1 w from the left edge of the window
-    cx, cy = grid(74, 68, "(b)  PadSink-Track", "the selection is renewed at every step")
+    cx, cy = grid(73, 66.5, "(b)  PadSink-Track", "the selection is renewed at every step")
     w = 7
     for t_, p_ in enumerate(need):
-        left = max(cx(p_) - 0.1 * w * cw, 74)
+        left = max(cx(p_) - 0.1 * w * cw, 73)
         ax.add_patch(Rectangle((left, cy(t_) - rh * 0.45), w * cw, rh * 0.9, fc=BLUE, alpha=0.4, ec="none"))
     for p_ in sinks:
         ax.add_patch(Rectangle((cx(p_) - cw * 0.42, y_bot), cw * 0.84, y_top - y_bot, fc=ORANGE, alpha=0.9, ec="none"))
@@ -87,13 +87,13 @@ def main():
              (BLUE, "s", "window $W_t$: follows\nthe alignment peak $c_t$"),
              (ORANGE, "s", "padding sink $S_ℓ$: exact\nK/V, chosen at t = 1")]
     for n, (col, mk, txt) in enumerate(items):
-        y = 101.5 - n * 5.6
-        ax.plot(134, y, marker=mk, ms=5.5 if mk == "s" else 3.6, color=col, mew=1.1, alpha=0.6 if col == BLUE else 1)
-        ax.text(138, y, txt, linespacing=1.15, **t)
+        y = 108.6 - n * 6.2                    # centred in the legend column
+        ax.plot(131.5, y, marker=mk, ms=5.5 if mk == "s" else 3.6, color=col, mew=1.1, alpha=0.6 if col == BLUE else 1)
+        ax.text(135.5, y, txt, linespacing=1.15, **t)
 
     # separators between the panels and the legend
-    for xa in (64.5, 129.0):
-        ax.plot([xa, xa], [76.4, 116], color=MUTED, lw=0.6, ls=DASH)
+    for xa in (62.0, 126.0):
+        ax.plot([xa, xa], [80, 116], color=MUTED, lw=0.6, ls=DASH)
     ax.plot([1, 172], [76.4, 76.4], color=MUTED, lw=0.6, ls=DASH)
 
     # (c) the step loop
