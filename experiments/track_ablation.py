@@ -8,9 +8,11 @@ track itself at K_i).
                   fixed number of encoder positions per output token; the
                   rate is the validation-split mean of (speech positions /
                   reference tokens) -- realizable.
-  fixed_rate_utt  the same with the rate of THIS utterance from its
-                  reference length -- not realizable, the best any fixed
-                  rate could do.
+  fixed_rate_utt  the same with the mean rate of THIS utterance (speech
+                  positions / reference tokens) -- not realizable. It is the
+                  utterance-matched rate, not the WER-optimal one: on three
+                  models it is worse than the validation-mean rate
+                  (paired difference +0.07..+0.11, CI above zero).
   static          the window never moves (a one-shot window at the start).
   nosink          no padding sink; the window gets the whole budget.
   allheads        the peak from every head of every layer instead of the

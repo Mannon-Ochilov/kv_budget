@@ -263,7 +263,7 @@ def fig_trace():
 def fig_ablation():
     rows = [("track", "PadSink-Track"), ("track_int8", "+ int8 cache"), ("track_sum", "+ padding summary slot"),
             ("v1", "window kept inside speech (v1)"), ("allheads", "peak from all heads"),
-            ("fixed_rate", "fixed-rate window (MURMUR-style)"), ("fixed_rate_utt", "fixed rate, per-utterance best"),
+            ("fixed_rate", "fixed-rate window (MURMUR-style)"), ("fixed_rate_utt", "fixed rate, utterance mean rate"),
             ("static", "window does not move"), ("nosink", "no padding sink")]
     fig, axs = plt.subplots(1, 4, figsize=(FULL, 6.4 * CM), sharey=True)
     for ax, (m, name), tag in zip(axs, MODELS, "abcd"):
