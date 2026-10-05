@@ -23,7 +23,7 @@ def main():
     ax.set_xlim(X0, X1)
     ax.set_ylim(Y0, Y1)
     ax.axis("off")
-    t = dict(fontsize=6.0, color=INK2, va="center")
+    t = dict(fontsize=6.0, color=INK, va="center")
     small = {**t, "fontsize": 5.4}
 
     # ------------------------------------------------ (a) calibration

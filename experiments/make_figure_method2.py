@@ -36,7 +36,7 @@ def main():
     ax.set_xlim(X0, X1)
     ax.set_ylim(Y0, Y1)
     ax.axis("off")
-    t = dict(fontsize=6.0, color=INK2, va="center")
+    t = dict(fontsize=6.0, color=INK, va="center")
 
     T, P, RN = 14, 40, 20                        # schematic: steps, positions, speech positions
     rng = np.random.default_rng(7)
@@ -52,7 +52,7 @@ def main():
         ax.add_patch(Rectangle((x0, y_bot), gw, y_top - y_bot, fc="none", ec=INK2, lw=0.6, zorder=4))
         ax.text(xt, 113.5, title, fontsize=8, fontweight="bold", color=INK, va="center")
         ax.text(xt, 109.3, sub, **t)
-        ax.text(x0 + gw / 2, y_top + 2.2, "encoder positions →", ha="center", **{**t, "color": MUTED})
+        ax.text(x0 + gw / 2, y_top + 2.2, "encoder positions →", ha="center", **{**t, "color": INK2})
         ax.text(x0 + RN * cw / 2, y_bot - 2.3, "speech ($n_r$ positions)", ha="center", **t)
         ax.text(x0 + RN * cw + (P - RN) * cw / 2, y_bot - 2.3, "padding (≈ 80 %)", ha="center", **t)
         ax.text(x0 - 1, y_top - rh / 2, "t = 1", ha="right", **t)
@@ -105,7 +105,7 @@ def main():
     for x, (head, txt, fc, ec) in zip(xs, boxes):
         ax.add_patch(FancyBboxPatch((x, by), bw, bh, boxstyle="round,pad=0.0,rounding_size=0.8", fc=fc, ec=ec, lw=0.7))
         ax.text(x + bw / 2, by + bh - 1.8, head, ha="center", va="top", fontsize=6.8, fontweight="bold", color=INK)
-        ax.text(x + bw / 2, by + bh - 6.4, txt, ha="center", va="top", fontsize=5.9, color=INK2, linespacing=1.3)
+        ax.text(x + bw / 2, by + bh - 6.4, txt, ha="center", va="top", fontsize=5.9, color=INK, linespacing=1.3)
     for x in xs[:-1]:
         arrow(ax, (x + bw, by + bh / 2), (x + bw + gap, by + bh / 2))
     x5, x2 = xs[4] + bw / 2, xs[1] + bw / 2

@@ -34,9 +34,9 @@ def box(ax, x, y, w, h, head=None, text=None, fc=PALE_G, ec=INK2, num=None, fs=6
     ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.0,rounding_size=0.8", fc=fc, ec=ec, lw=0.7, ls=ls))
     if head:
         ax.text(x + w / 2, y + h - 1.5, head, ha="center", va="top", fontsize=7, fontweight="bold", color=INK)
-        ax.text(x + w / 2, y + h - 5.3, text or "", ha="center", va="top", fontsize=fs, color=INK2, linespacing=1.25)
+        ax.text(x + w / 2, y + h - 5.3, text or "", ha="center", va="top", fontsize=fs, color=INK, linespacing=1.25)
     elif text:
-        ax.text(x + w / 2, y + h / 2, text, ha="center", va="center", fontsize=fs, color=INK2, linespacing=1.25)
+        ax.text(x + w / 2, y + h / 2, text, ha="center", va="center", fontsize=fs, color=INK, linespacing=1.25)
     if num:
         badge(ax, x + 0.4, y + h - 0.4, num, ec)        # on the corner, clear of the heading
 
@@ -63,7 +63,7 @@ def main(panel_c=True, palatino=False):
     ax.set_xlim(X0, X1)
     ax.set_ylim(y_min, Y1)
     ax.axis("off")
-    t = dict(fontsize=6.0, color=INK2, va="center")
+    t = dict(fontsize=6.0, color=INK, va="center")
     small = {**t, "fontsize": 5.4}
 
     # ------------------------------------------------ (a) calibration
